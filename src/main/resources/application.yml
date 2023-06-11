@@ -1,0 +1,15 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+  ssl:
+    enabled: false
+    enabled-protocols: TLSv1.2
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+  tomcat:
+    accesslog:
+      request-attributes-enabled: true
