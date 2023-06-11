@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=acm'
+      - 'POSTGRES_PASSWORD=acmheads'
+      - 'POSTGRES_USER=acmsecy'
+    ports:
+      - '5432:5432'
