@@ -3,10 +3,7 @@ spring:
     url: jdbc:postgresql://localhost:5432/acm
     username: acmsecy
     password: acmheads
-    hikari:
-      connectionTimeout: 10000
-      maximumPoolSize: 5
-    driverClassName: org.postgresql.Driver
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,4 +12,4 @@ spring:
         format_sql: true
         show-sql: true
         use_sql_comments: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
