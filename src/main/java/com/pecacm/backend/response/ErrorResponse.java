@@ -1,4 +1,4 @@
-package com.pecacm.backend.model;
+package com.pecacm.backend.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

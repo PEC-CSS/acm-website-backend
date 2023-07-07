@@ -1,6 +1,6 @@
 package com.pecacm.backend.exception;
 
-import com.pecacm.backend.model.ErrorResponse;
+import com.pecacm.backend.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 
 public class AcmException extends RuntimeException {

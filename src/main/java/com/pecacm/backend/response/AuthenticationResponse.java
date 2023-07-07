@@ -1,4 +1,4 @@
-package com.pecacm.backend.model;
+package com.pecacm.backend.response;
 
 import com.pecacm.backend.entities.User;
 import lombok.AllArgsConstructor;

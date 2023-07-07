@@ -1,4 +1,4 @@
-package com.pecacm.backend.util;
+package com.pecacm.backend.configuration;
 
 import com.pecacm.backend.filters.JwtFilter;
 import com.pecacm.backend.services.UserService;

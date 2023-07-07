@@ -48,10 +48,10 @@ public class User implements UserDetails {
     private Boolean verified = false;
 
     @Column(name="designation")
-    private String designation;
+    private String designation = "Member";
 
     @Column(name="xp_total")
-    private Integer xp;
+    private Integer xp = 0;
 
     @Override
     @JsonIgnore

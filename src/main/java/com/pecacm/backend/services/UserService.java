@@ -17,9 +17,9 @@ import java.util.UUID;
 @Service
 public class UserService implements UserDetailsService {
 
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    private VerificationTokenRepository verificationTokenRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
     public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository) {
@@ -29,7 +29,7 @@ public class UserService implements UserDetailsService {
 
     public User addUser(User user, PasswordEncoder passwordEncoder) {
         if(userRepository.existsByEmailOrSid(user.getEmail(), user.getSid())) {
-            throw new AcmException("User with given email or SID already exists", HttpStatus.CONFLICT);
+            throw new AcmException("User with given email or SID already exists", HttpStatus.BAD_REQUEST);
         }
         if(Strings.isBlank(user.getEmail()) || Strings.isBlank(user.getPassword()) || user.getSid() == null ||
             Strings.isBlank(user.getBranch())
