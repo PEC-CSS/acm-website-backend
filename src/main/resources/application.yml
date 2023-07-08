@@ -14,16 +14,12 @@ server:
     accesslog:
       request-attributes-enabled: true
 
-
 spring:
   datasource:
-    url:
-    username:
-    password:
-    hikari:
-      connectionTimeout: 10000
-      maximumPoolSize: 5
-    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/acm
+    username: acmsecy
+    password: acmheads
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
@@ -48,5 +44,5 @@ spring:
 
 verify:
   base:
-    backend: http://localhost:8080/
-    frontend: http://localhost:3000/
+    backend:
+    frontend:
