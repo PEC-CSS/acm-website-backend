@@ -1,6 +1,7 @@
 package com.pecacm.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pecacm.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -47,8 +48,8 @@ public class User implements UserDetails {
     @Column(name = "verified")
     private Boolean verified = false;
 
-    @Column(name="designation")
-    private String designation = "Member";
+    @Enumerated(EnumType.STRING)
+    private Role designation = Role.Member;
 
     @Column(name="xp_total")
     private Integer xp = 0;

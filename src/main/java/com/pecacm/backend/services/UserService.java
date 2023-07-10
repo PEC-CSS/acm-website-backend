@@ -2,7 +2,9 @@ package com.pecacm.backend.services;
 
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
+import com.pecacm.backend.enums.Role;
 import com.pecacm.backend.exception.AcmException;
+import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
 import org.apache.logging.log4j.util.Strings;
@@ -56,5 +58,29 @@ public class UserService implements UserDetailsService {
         user.setVerified(true);
         verificationTokenRepository.deleteById(tokenId);
         return userRepository.save(user);
+    }
+
+    public String changeRole(AssignRoleRequest assignRoleRequest) {
+        Role requesterRole = userRepository.findRoleByEmail(assignRoleRequest.getRequesterEmail())
+            .orElseThrow(() ->
+                new AcmException("User with provided email does not exist", HttpStatus.NOT_FOUND)
+            );
+
+        Role requestUserRole = userRepository.findRoleByEmail(assignRoleRequest.getRequestEmail())
+                .orElseThrow(() ->
+                        new AcmException("User with provided email does not exist", HttpStatus.NOT_FOUND)
+                );
+
+        Boolean isNewRoleLessThanUserRole = assignRoleRequest.getNewRole().compareTo(requesterRole) < 0;
+        Boolean isUserAuthorizedToChangeRole = requesterRole.equals(Role.Core) || requesterRole.equals(Role.Admin);
+        Boolean isRequestUserRoleLessThanRequester = requestUserRole.compareTo(requesterRole) < 0;
+
+        if (isNewRoleLessThanUserRole && isUserAuthorizedToChangeRole && isRequestUserRoleLessThanRequester)
+        {
+            userRepository.updateRoleByEmail(assignRoleRequest.getRequestEmail(), assignRoleRequest.getNewRole());
+            return "Successfully Updated";
+        }
+
+        throw new AcmException("User Unauthorized");
     }
 }
