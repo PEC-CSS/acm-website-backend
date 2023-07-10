@@ -57,4 +57,11 @@ public class UserService implements UserDetailsService {
         verificationTokenRepository.deleteById(tokenId);
         return userRepository.save(user);
     }
+
+    public User getUserById(Integer userId){
+        return userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new AcmException("Replace with constants", HttpStatus.NOT_FOUND)
+                );
+    }
 }
