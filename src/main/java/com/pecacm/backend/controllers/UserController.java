@@ -47,7 +47,7 @@ public class UserController {
     public ResponseEntity<AuthenticationResponse> registerUser(@RequestBody User user) {
         User newUser = userService.addUser(user, passwordEncoder);
         String jwtToken = jwtService.generateToken(user);
-        //emailService.sendVerificationEmail(newUser);
+        emailService.sendVerificationEmail(newUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(new AuthenticationResponse(jwtToken, newUser));
     }
 
