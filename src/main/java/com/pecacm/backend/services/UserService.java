@@ -1,5 +1,7 @@
 package com.pecacm.backend.services;
 
+import com.pecacm.backend.constants.Constants;
+import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.enums.Role;
@@ -63,12 +65,12 @@ public class UserService implements UserDetailsService {
     public String changeRole(AssignRoleRequest assignRoleRequest) {
         Role requesterRole = userRepository.findRoleByEmail(assignRoleRequest.getRequesterEmail())
             .orElseThrow(() ->
-                new AcmException("User with provided email does not exist", HttpStatus.NOT_FOUND)
+                new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
             );
 
         Role requestUserRole = userRepository.findRoleByEmail(assignRoleRequest.getRequestEmail())
                 .orElseThrow(() ->
-                        new AcmException("User with provided email does not exist", HttpStatus.NOT_FOUND)
+                        new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
                 );
 
         Boolean isNewRoleLessThanUserRole = assignRoleRequest.getNewRole().compareTo(requesterRole) < 0;
@@ -78,9 +80,9 @@ public class UserService implements UserDetailsService {
         if (isNewRoleLessThanUserRole && isUserAuthorizedToChangeRole && isRequestUserRoleLessThanRequester)
         {
             userRepository.updateRoleByEmail(assignRoleRequest.getRequestEmail(), assignRoleRequest.getNewRole());
-            return "Successfully Updated";
+            return Constants.UPDATE_SUCCESS;
         }
 
-        throw new AcmException("User Unauthorized");
+        throw new AcmException(ErrorConstants.USER_UNAUTHORIZED);
     }
 }
