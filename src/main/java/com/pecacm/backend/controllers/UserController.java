@@ -80,7 +80,7 @@ public class UserController {
         return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
     }
 
-    @GetMapping("/v1/users/{userId}")
+    @GetMapping("/{userId}")
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
