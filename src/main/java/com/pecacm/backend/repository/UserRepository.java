@@ -24,4 +24,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "SET designation = :newRole " +
            "WHERE email = :email")
     void updateRoleByEmail(String email, Role newRole);
+
 }

@@ -89,4 +89,11 @@ public class UserService implements UserDetailsService {
 
         throw new AcmException(ErrorConstants.USER_UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
     }
+
+    public User getUserById(Integer userId){
+        return userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+                );
+    }
 }

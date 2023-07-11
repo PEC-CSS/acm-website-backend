@@ -80,6 +80,11 @@ public class UserController {
         return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
     }
 
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
+        return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
     @ExceptionHandler(AcmException.class)
     public ResponseEntity<ErrorResponse> handleException(AcmException e) {
         return ResponseEntity.status(e.getStatus()).body(e.toErrorResponse());
