@@ -25,5 +25,4 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "WHERE email = :email")
     void updateRoleByEmail(String email, Role newRole);
 
-    Optional<User> findById(Integer id);
 }
