@@ -1,16 +1,22 @@
 package com.pecacm.backend.services;
 
+import com.pecacm.backend.constants.Constants;
+import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
+import com.pecacm.backend.enums.Role;
 import com.pecacm.backend.exception.AcmException;
+import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -56,6 +62,32 @@ public class UserService implements UserDetailsService {
         user.setVerified(true);
         verificationTokenRepository.deleteById(tokenId);
         return userRepository.save(user);
+    }
+
+    @Transactional
+    public String changeRole(AssignRoleRequest assignRoleRequest) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        Role requesterRole = userRepository.findRoleByEmail(userEmail)
+            .orElseThrow(() ->
+                new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+            );
+
+        Role requestUserRole = userRepository.findRoleByEmail(assignRoleRequest.getEmail())
+                .orElseThrow(() ->
+                        new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
+                );
+
+        Boolean isNewRoleLessThanUserRole = assignRoleRequest.getNewRole().compareTo(requesterRole) < 0;
+        Boolean isUserAuthorizedToChangeRole = requesterRole.equals(Role.Core) || requesterRole.equals(Role.Admin);
+        Boolean isRequestUserRoleLessThanRequester = requestUserRole.compareTo(requesterRole) < 0;
+
+        if (isNewRoleLessThanUserRole && isUserAuthorizedToChangeRole && isRequestUserRoleLessThanRequester)
+        {
+            userRepository.updateRoleByEmail(assignRoleRequest.getEmail(), assignRoleRequest.getNewRole());
+            return Constants.UPDATE_SUCCESS;
+        }
+
+        throw new AcmException(ErrorConstants.USER_UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
     }
 
     public User getUserById(Integer userId){
