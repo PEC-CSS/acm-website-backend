@@ -3,6 +3,7 @@ package com.pecacm.backend.repository;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +19,7 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "WHERE u.email = :email")
     Optional<Role> findRoleByEmail(String email);
 
+    @Modifying
     @Query("UPDATE User " +
            "SET designation = :newRole " +
            "WHERE email = :email")

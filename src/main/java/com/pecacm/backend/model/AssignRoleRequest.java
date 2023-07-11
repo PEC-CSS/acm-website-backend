@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class AssignRoleRequest {
-    String requesterEmail;
-    String requestEmail;
-    Role newRole;
+    private String email;
+    private Role newRole;
 }
