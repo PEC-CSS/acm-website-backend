@@ -93,7 +93,7 @@ public class UserService implements UserDetailsService {
     public User getUserById(Integer userId){
         return userRepository.findById(userId)
                 .orElseThrow(() ->
-                        new AcmException("Replace with constants", HttpStatus.NOT_FOUND)
+                        new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
                 );
     }
 }
