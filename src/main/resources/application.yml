@@ -17,9 +17,9 @@ server:
 
 spring:
   datasource:
-    url:
-    username:
-    password:
+    url: jdbc:postgresql://localhost:5432/acm
+    username: acmsecy
+    password: acmheads
     hikari:
       connectionTimeout: 10000
       maximumPoolSize: 5

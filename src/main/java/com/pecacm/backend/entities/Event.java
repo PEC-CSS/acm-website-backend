@@ -21,18 +21,18 @@ public class Event {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "subgroup")
-    private String subgroup;
+    @Column(name = "branch")
+    private String branch;
 
     @Column(name = "date")
     private Timestamp date;
-
-    @Column(name = "participants_sheet")
-    private String participants;
 
     @Column(name="detail")
     private String detail;
 
     @Column(name = "attendance_sheet")
     private String attendance;
+
+    @Column(name = "event_status")
+    private String eventStatus;
 }
