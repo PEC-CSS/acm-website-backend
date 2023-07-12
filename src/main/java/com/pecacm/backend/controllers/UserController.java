@@ -2,6 +2,7 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.exception.AcmException;
+import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.ErrorResponse;
@@ -72,6 +73,16 @@ public class UserController {
     public ResponseEntity<String> verifyUser(@RequestParam UUID token) {
         userService.verifyUser(token);
         return ResponseEntity.ok("Verification successful!");
+    }
+
+    @PostMapping("/assignRole")
+    public ResponseEntity<String> assignRole(@RequestBody AssignRoleRequest assignRoleRequest) {
+        return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
+        return ResponseEntity.ok(userService.getUserById(userId));
     }
 
     @ExceptionHandler(AcmException.class)
