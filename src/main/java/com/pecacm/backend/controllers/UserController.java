@@ -1,5 +1,6 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
@@ -12,6 +13,7 @@ import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -81,6 +83,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
+    @PreAuthorize(Constants.HAS_ROLE_ADMIN)
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
