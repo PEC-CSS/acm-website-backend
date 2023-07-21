@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,5 +25,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "SET designation = :newRole " +
            "WHERE email = :email")
     void updateRoleByEmail(String email, Role newRole);
+
+    Long countByXpGreaterThan(Integer xp);
+
+    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT 5")
+    List<User> findAllByByOrderByXpDesc();
+
 
 }
