@@ -44,25 +44,21 @@ public class EventService {
     }
 
     public Boolean createEvent(Event event) {
-        // TODO: Place checks
+        // TODO: Check if there's an event clashing with it idk
         eventRepository.save(event);
         return true;
     }
 
     public Optional<Event> getSingleEvent(Integer eventId) {
-
         return eventRepository.findById(eventId);
     }
 
     public Event updateEvent(Event event) {
-
         return eventRepository.save(event);
     }
 
-    public Boolean deleteEvent(Integer eventId) {
-        // TODO: Place checks
+    public void deleteEvent(Integer eventId) {
         eventRepository.deleteById(eventId);
-        return true;
     }
 
     public List<Event> getEventsByBranch(String branch) {

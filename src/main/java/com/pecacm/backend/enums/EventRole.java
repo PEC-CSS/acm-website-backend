@@ -1,4 +1,4 @@
-package com.pecacm.backend.constants;
+package com.pecacm.backend.enums;
 
 public enum EventRole {
     ORGANIZER,

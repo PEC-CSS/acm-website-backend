@@ -27,7 +27,7 @@ public class Attendance {
     @Column(name = "role")
     // TODO: Change name
 
-    private String role;
+    private String eventRole;
 
     @Column(name = "status")
     private String status;
