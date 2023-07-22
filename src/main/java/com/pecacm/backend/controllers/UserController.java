@@ -12,12 +12,14 @@ import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -83,6 +85,16 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
+    }
+
+    @GetMapping("/rank")
+    public ResponseEntity<Long> getRank(@RequestParam @NonNull Integer score) {
+        return ResponseEntity.ok(userService.getRank(score));
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<User>> getLeaderboard() {
+        return ResponseEntity.ok(userService.getLeaderboard());
     }
 
     @ExceptionHandler(AcmException.class)
