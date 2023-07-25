@@ -24,3 +24,8 @@ Backend of the official website of PEC ACM CSS
 - Take pull of latest `main` branch before pushing code.
 
 Goodluck :)
+
+## Contributors
+<a href="https://github.com/PEC-CSS/acm-website-backend/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=PEC-CSS/acm-website-backend" />
+</a>

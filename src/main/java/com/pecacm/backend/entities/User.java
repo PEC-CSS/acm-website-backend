@@ -51,7 +51,7 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role designation = Role.Member;
 
-    @Column(name="xp_total")
+    @Column(name="xp_total", nullable = false)
     private Integer xp = 0;
 
     @Override

@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -95,5 +96,13 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() ->
                         new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND)
                 );
+    }
+
+    public Long getRank(Integer score) {
+        return userRepository.countByXpGreaterThan(score) + 1;
+    }
+
+    public List<User> getLeaderboard() {
+        return userRepository.findAllByByOrderByXpDesc();
     }
 }
