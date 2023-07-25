@@ -46,6 +46,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<AuthenticationResponse> registerUser(@RequestBody User user) {
         User newUser = userService.addUser(user, passwordEncoder);
         String jwtToken = jwtService.generateToken(user);
@@ -54,6 +55,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<AuthenticationResponse> loginUser(@RequestBody AuthenticationRequest request) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
@@ -72,18 +74,20 @@ public class UserController {
     }
 
     @GetMapping("/verify")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<String> verifyUser(@RequestParam UUID token) {
         userService.verifyUser(token);
         return ResponseEntity.ok("Verification successful!");
     }
 
     @PostMapping("/assignRole")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public ResponseEntity<String> assignRole(@RequestBody AssignRoleRequest assignRoleRequest) {
         return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize(Constants.HAS_ROLE_ADMIN)
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }

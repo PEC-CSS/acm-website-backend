@@ -5,7 +5,6 @@ import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -49,10 +48,8 @@ public class SecurityConfiguration {
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        a -> a.requestMatchers(HttpMethod.POST, "/v1/user", "/v1/user/login").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/v1/user/verify").permitAll()
-                                .requestMatchers("/error").anonymous()
-                                .anyRequest().authenticated()
+                        a -> a.requestMatchers("/error").anonymous()
+                                .anyRequest().permitAll()
                 )
                 .sessionManagement(
                         s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
