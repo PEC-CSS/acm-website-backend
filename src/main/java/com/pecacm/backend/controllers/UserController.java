@@ -1,5 +1,6 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
@@ -12,6 +13,7 @@ import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -46,6 +48,7 @@ public class UserController {
     }
 
     @PostMapping
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<AuthenticationResponse> registerUser(@RequestBody User user) {
         User newUser = userService.addUser(user, passwordEncoder);
         String jwtToken = jwtService.generateToken(user);
@@ -54,6 +57,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<AuthenticationResponse> loginUser(@RequestBody AuthenticationRequest request) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
@@ -72,17 +76,20 @@ public class UserController {
     }
 
     @GetMapping("/verify")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<String> verifyUser(@RequestParam UUID token) {
         userService.verifyUser(token);
         return ResponseEntity.ok("Verification successful!");
     }
 
     @PostMapping("/assignRole")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public ResponseEntity<String> assignRole(@RequestBody AssignRoleRequest assignRoleRequest) {
         return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
     }
 
     @GetMapping("/{userId}")
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
