@@ -17,13 +17,14 @@ server:
 
 spring:
   datasource:
-    url:
-    username:
-    password:
+    url: jdbc:postgresql://postgres:5432/acm
+    username: acmsecy
+    password: acmheads
     hikari:
       connectionTimeout: 10000
       maximumPoolSize: 5
     driverClassName: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: update

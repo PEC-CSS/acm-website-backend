@@ -1,9 +1,37 @@
 services:
   postgres:
     image: 'postgres:latest'
+    container_name: postgres
     environment:
       - 'POSTGRES_DB=acm'
       - 'POSTGRES_PASSWORD=acmheads'
       - 'POSTGRES_USER=acmsecy'
     ports:
       - '5432:5432'
+    volumes:
+      - db-data:/var/lib/backup/data
+    networks:
+      - acm_network
+
+  backend:
+    image: 'pecacm/acm-website:latest'
+    container_name: backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/acm
+      SPRING_DATASOURCE_USERNAME: acmsecy
+      SPRING_DATASOURCE_PASSWORD: acmheads
+    ports:
+      - '8080:8080'
+    volumes:
+      - db-data:/var/lib/backup/dynamic
+    networks:
+      - acm_network
+    depends_on:
+      - postgres
+
+volumes:
+  db-data:
+
+networks:
+  acm_network:
+    driver: bridge

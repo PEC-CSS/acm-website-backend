@@ -13,6 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>backend</name>
     <description>backend</description>
+    <packaging>jar</packaging>
     <properties>
         <java.version>17</java.version>
     </properties>
