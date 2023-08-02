@@ -43,5 +43,5 @@ jobs:
       - name: Push Image
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          IMAGE_NAME: ${{ env.DOCKER_USERNAME }}/acm-website:latest
+          IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/acm-website:latest
         run: docker push ${{ env.IMAGE_NAME }}
