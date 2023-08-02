@@ -1,0 +1,33 @@
+name: Build and Test package
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+    name: CI
+    environment: dockerhub
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'oracle'
+
+      - name: Build JAR with maven
+        env:
+          DB_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DB_URL: ${{ secrets.POSTGRES_URL }}
+          MAIL_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_ID: ${{ secrets.SMTP_EMAIL }}
+        run: mvn clean package spring-boot:repackage -DPOSTGRESQL_DB_URL="${{ env.DB_URL }}" -DPOSTGRESQL_DB_USER=postgres -DPOSTGRESQL_DB_PASSWORD=${{ env.DB_PASSWORD }} -DSMTP_EMAIL=${{ env.MAIL_ID }} -DSMTP_PASSWORD=${{ env.MAIL_PASSWORD }}
+
+      - name: Build the Docker image
+        env:
+          IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/acm-website:latest
+        run: docker build -t ${{ env.IMAGE_NAME }} .
