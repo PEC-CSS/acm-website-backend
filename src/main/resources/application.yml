@@ -17,9 +17,9 @@ server:
 
 spring:
   datasource:
-    url: ${POSTGRESQL_DB_URL}
-    username: ${POSTGRESQL_DB_USER}
-    password: ${POSTGRESQL_DB_PASSWORD}
+    url: ${POSTGRESQL_DB_URL:jdbc:postgresql://localhost:5432/acm}
+    username: ${POSTGRESQL_DB_USER:acmsecy}
+    password: ${POSTGRESQL_DB_PASSWORD:acmheads}
     hikari:
       connectionTimeout: 10000
       maximumPoolSize: 5
