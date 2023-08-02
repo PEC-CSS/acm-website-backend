@@ -26,7 +26,7 @@ jobs:
           DB_URL: ${{ secrets.POSTGRES_URL }}
           MAIL_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           MAIL_ID: ${{ secrets.SMTP_EMAIL }}
-        run: mvn clean package spring-boot:repackage -DPOSTGRESQL_DB_URL=${{ env.DB_URL }} -DPOSTGRESQL_DB_USER=postgres -DPOSTGRESQL_DB_PASSWORD=${{ env.DB_PASSWORD }} -DSMTP_EMAIL=${{ env.MAIL_ID }} -DSMTP_PASSWORD=${{ env.MAIL_PASSWORD }}
+        run: mvn clean package spring-boot:repackage -DPOSTGRESQL_DB_URL="${{ env.DB_URL }}" -DPOSTGRESQL_DB_USER=postgres -DPOSTGRESQL_DB_PASSWORD=${{ env.DB_PASSWORD }} -DSMTP_EMAIL=${{ env.MAIL_ID }} -DSMTP_PASSWORD=${{ env.MAIL_PASSWORD }}
 
       - name: Build the Docker image
         env:
