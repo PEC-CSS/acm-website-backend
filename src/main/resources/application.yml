@@ -17,9 +17,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/acm
-    username: acmsecy
-    password: acmheads
+    url: ${POSTGRESQL_DB_URL}
+    username: ${POSTGRESQL_DB_USER}
+    password: ${POSTGRESQL_DB_PASSWORD}
     hikari:
       connectionTimeout: 10000
       maximumPoolSize: 5
@@ -37,8 +37,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username:
-    password:
+    username: ${SMTP_EMAIL:email}
+    password: ${SMTP_PASSWORD:password}
     properties:
       mail:
         smtp:
