@@ -28,15 +28,15 @@ import java.util.UUID;
 @RequestMapping("/v1/user")
 public class UserController {
 
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    private UserService userService;
+    private final UserService userService;
 
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public UserController(EmailService emailService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
@@ -82,14 +82,14 @@ public class UserController {
         return ResponseEntity.ok("Verification successful!");
     }
 
-    @PostMapping("/assignRole")
+    @PostMapping("/assign/role")
     @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public ResponseEntity<String> assignRole(@RequestBody AssignRoleRequest assignRoleRequest) {
         return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
