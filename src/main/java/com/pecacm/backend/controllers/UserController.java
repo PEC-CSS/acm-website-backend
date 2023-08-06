@@ -89,7 +89,7 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<User> getUserById(@PathVariable Integer userId) {
         return ResponseEntity.ok(userService.getUserById(userId));
     }
