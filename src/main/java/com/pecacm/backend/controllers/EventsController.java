@@ -4,14 +4,12 @@ import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.services.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/events")
@@ -49,6 +47,7 @@ public class EventsController {
     }
 
     @GetMapping("/user/{userId}")
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<List<Event>> getUserEventsByRole(@PathVariable Integer userId, @RequestParam("role") String role) {
         if (role == null){
             return ResponseEntity.ok(eventService.getUserEvents(userId));
