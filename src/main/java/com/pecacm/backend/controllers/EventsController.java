@@ -57,9 +57,9 @@ public class EventsController {
 
     @PostMapping
     @PreAuthorize(Constants.HAS_ROLE_IB_AND_ABOVE)
-    public ResponseEntity<Void> createEvent(@RequestBody Event event){
-        eventService.createEvent(event);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<Event> createEvent(@RequestBody Event event){
+        Event createdEvent = eventService.createEvent(event);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
     }
 
     @PutMapping("/{eventId}")

@@ -6,15 +6,14 @@ import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
-import com.pecacm.backend.response.ErrorResponse;
 import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -102,10 +101,5 @@ public class UserController {
     @GetMapping("/leaderboard")
     public ResponseEntity<List<User>> getLeaderboard() {
         return ResponseEntity.ok(userService.getLeaderboard());
-    }
-
-    @ExceptionHandler(AcmException.class)
-    public ResponseEntity<ErrorResponse> handleException(AcmException e) {
-        return ResponseEntity.status(e.getStatus()).body(e.toErrorResponse());
     }
 }

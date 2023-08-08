@@ -1,12 +1,14 @@
 package com.pecacm.backend.services;
 
+import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.User;
+import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.repository.AttendanceRepository;
 import com.pecacm.backend.repository.EventRepository;
 import com.pecacm.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -36,8 +38,8 @@ public class EventService {
 
     public Event getSingleEvent(Integer eventId) {
         Optional<Event> event = eventRepository.findById(eventId);
-        if(event.isEmpty()) {
-            throw new ResourceNotFoundException("Event doesn't not exist with id :" + eventId);
+        if (event.isEmpty()) {
+            throw new AcmException("Event doesn't not exist with id :" + eventId, HttpStatus.NOT_FOUND);
         }
         return event.get();
     }
@@ -47,7 +49,7 @@ public class EventService {
     }
 
     public List<Event> getUserEvents(Integer userId) {
-        List <Event> events = new ArrayList<>();
+        List<Event> events = new ArrayList<>();
         attendanceRepository.findByUserId(userId).forEach(
                 attendance -> events.add(attendance.getEvent())
         );
@@ -56,9 +58,9 @@ public class EventService {
 
     public List<Event> getUserEventsByRole(Integer userId, String role) {
         Optional<User> user = userRepository.findById(userId);
-        List <Event> events = new ArrayList<>();
-        if(user.isEmpty()) {
-            return events; // TODO : exception
+        List<Event> events = new ArrayList<>();
+        if (user.isEmpty()) {
+            throw new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
         attendanceRepository.findByUserIdAndRole(userId, role).forEach(
                 attendance -> events.add(attendance.getEvent())
@@ -67,18 +69,26 @@ public class EventService {
     }
 
     public Event createEvent(Event event) {
-        return eventRepository.save(event);
+        try {
+            return eventRepository.save(event);
+        } catch (Exception e) {
+            throw new AcmException("Event not created", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     public Event updateEvent(Event updatedEvent, Integer eventId) {
         Optional<Event> event = eventRepository.findById(eventId);
-        if(event.isEmpty() || !Objects.equals(event.get().getId(), eventId)) {
-            return null;
+        if (event.isEmpty() || !Objects.equals(event.get().getId(), eventId)) {
+            throw new AcmException("Event cannot be updated", HttpStatus.BAD_REQUEST);
         }
         return eventRepository.save(updatedEvent);
     }
 
     public void deleteEvent(Integer eventId) {
-        eventRepository.deleteById(eventId);
+        try {
+            eventRepository.deleteById(eventId);
+        } catch (Exception ex) {
+            throw new AcmException("Event cannot be deleted, eventId=" + eventId, HttpStatus.BAD_REQUEST);
+        }
     }
 }
