@@ -72,7 +72,7 @@ public class EventService {
         try {
             return eventRepository.save(event);
         } catch (Exception e) {
-            throw new AcmException("Event not created", HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new AcmException("Event not created, " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -81,6 +81,7 @@ public class EventService {
         if (event.isEmpty() || !Objects.equals(event.get().getId(), eventId)) {
             throw new AcmException("Event cannot be updated", HttpStatus.BAD_REQUEST);
         }
+        updatedEvent.setId(eventId);
         return eventRepository.save(updatedEvent);
     }
 
