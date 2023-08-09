@@ -16,7 +16,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final VerificationTokenRepository verificationTokenRepository;
 
-    @Value("${verify.base.backend}") // TODO: change to frontend when ready
+    @Value("${verify.base.frontend}")
     private String hostname;
 
     @Autowired

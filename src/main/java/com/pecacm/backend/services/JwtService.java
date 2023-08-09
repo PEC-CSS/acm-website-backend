@@ -3,6 +3,7 @@ package com.pecacm.backend.services;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -13,16 +14,16 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // TODO: get from config instead of hardcoding
-    private static final String SECRET_KEY = "nyanpasu";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     public String generateToken(UserDetails userDetails) {
-        HashMap<String,Object> claims = new HashMap<>();
+        HashMap<String, Object> claims = new HashMap<>();
         return Jwts.builder().setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + (1000L * 3600 * 24 * 30)))
-                .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
@@ -42,13 +43,13 @@ public class JwtService {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public <T> T extractClaim(String token, Function<Claims,T> claim) {
+    public <T> T extractClaim(String token, Function<Claims, T> claim) {
         Claims claims = extractAllClaims(token);
         return claim.apply(claims);
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
     }
 
 }

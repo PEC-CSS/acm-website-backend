@@ -1,7 +1,7 @@
 services:
-  postgres:
+  postgres-database:
     image: 'postgres:latest'
-    container_name: postgres
+    container_name: postgres-database
     environment:
       - 'POSTGRES_DB=acm'
       - 'POSTGRES_PASSWORD=acmheads'
