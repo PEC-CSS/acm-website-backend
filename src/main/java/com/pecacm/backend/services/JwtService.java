@@ -1,9 +1,11 @@
 package com.pecacm.backend.services;
 
+import com.pecacm.backend.exception.AcmException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -28,28 +30,52 @@ public class JwtService {
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
-        return extractUsername(token).equals(userDetails.getUsername()) && !isTokenExpired(token);
+        try {
+            return extractUsername(token).equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (Exception ex) {
+            throw new AcmException("Token is invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
+        try {
+            return extractExpiration(token).before(new Date());
+        } catch (Exception ex) {
+            throw new AcmException("Token is invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        try {
+            return extractClaim(token, Claims::getExpiration);
+        } catch (Exception ex) {
+            throw new AcmException("Token is invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        try {
+            return extractClaim(token, Claims::getSubject);
+        } catch (Exception ex) {
+            throw new AcmException("Token is invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claim) {
-        Claims claims = extractAllClaims(token);
-        return claim.apply(claims);
+        try {
+            Claims claims = extractAllClaims(token);
+            return claim.apply(claims);
+        } catch (Exception ex) {
+            throw new AcmException("Token is invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+        try {
+            return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody();
+        } catch (Exception ex) {
+            throw new AcmException("Token is invalid", HttpStatus.BAD_REQUEST);
+        }
     }
 
 }
