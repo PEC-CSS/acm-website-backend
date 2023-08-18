@@ -34,7 +34,7 @@ public class EmailService {
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Email verification");
         mailMessage.setText(
-                "Click on the link to verify your email: " + hostname + "v1/user/verify?token=" + token.getToken()
+                "Click on the link to verify your email: " + hostname + "verify?token=" + token.getToken()
         );
         javaMailSender.send(mailMessage);
     }

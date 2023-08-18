@@ -1,3 +1,5 @@
+server:
+  port: 8080
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/acm
@@ -24,3 +26,6 @@ spring:
           auth: true
           starttls:
             enable: true
+verify:
+  base:
+    frontend: http://localhost:3000/
