@@ -15,4 +15,11 @@ public class HealthController {
     public String health() {
         return "Health OK";
     }
+
+    @GetMapping("/hello")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
+    public String hello() {
+        return "Hey boi";
+    }
 }
