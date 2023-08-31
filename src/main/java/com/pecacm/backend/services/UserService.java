@@ -34,7 +34,7 @@ public class UserService implements UserDetailsService {
         this.verificationTokenRepository = verificationTokenRepository;
     }
 
-    public User addUser(User user, PasswordEncoder passwordEncoder) {
+    public void addUser(User user, PasswordEncoder passwordEncoder) {
         if (userRepository.existsByEmailOrSid(user.getEmail(), user.getSid())) {
             throw new AcmException("User with given email or SID already exists", HttpStatus.BAD_REQUEST);
         }
@@ -44,7 +44,9 @@ public class UserService implements UserDetailsService {
             throw new AcmException("One or more required fields are empty", HttpStatus.BAD_REQUEST);
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+        Integer batch = 2004 + Math.floorDiv(user.getSid(), 1000000); // hacky fix
+        user.setBatch(batch);
+        userRepository.save(user);
     }
 
     @Override

@@ -2,10 +2,12 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.User;
+import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
+import com.pecacm.backend.response.RegisterResponse;
 import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
@@ -50,18 +52,18 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<AuthenticationResponse> registerUser(@RequestBody User user) {
-        User newUser = userService.addUser(user, passwordEncoder);
-        String jwtToken = jwtService.generateToken(user);
-        emailService.sendVerificationEmail(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthenticationResponse(jwtToken, newUser));
+    public ResponseEntity<RegisterResponse> registerUser(@RequestBody User user) {
+        userService.addUser(user, passwordEncoder);
+//        emailService.sendVerificationEmail(newUser); REASON : too much latency
+        VerificationToken token = emailService.getVerificationToken(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(token.getToken().toString()));
     }
 
     @GetMapping
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<User> getUserInfo() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-       String email = (String) authentication.getPrincipal();
+        String email = (String) authentication.getPrincipal();
         return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
@@ -72,13 +74,12 @@ public class UserController {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     request.getEmail(), request.getPassword()
             ));
-        }
-        catch (BadCredentialsException e) {
+        } catch (BadCredentialsException e) {
             throw new AcmException("Incorrect email or password", HttpStatus.UNAUTHORIZED);
         }
         User user = userService.loadUserByUsername(request.getEmail());
-        if(!user.getVerified()) {
-            emailService.sendVerificationEmail(user);
+        if (!user.getVerified()) {
+            throw new AcmException("User not verified, please verify with the link sent to your email.", HttpStatus.UNAUTHORIZED);
         }
         String jwtToken = jwtService.generateToken(user);
         return ResponseEntity.ok(new AuthenticationResponse(jwtToken, user));

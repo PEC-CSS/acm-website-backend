@@ -38,4 +38,11 @@ public class EmailService {
         );
         javaMailSender.send(mailMessage);
     }
+
+    @Transactional
+    public VerificationToken getVerificationToken(User user) {
+        return verificationTokenRepository.save(
+                VerificationToken.builder().user(user).build()
+        );
+    }
 }
