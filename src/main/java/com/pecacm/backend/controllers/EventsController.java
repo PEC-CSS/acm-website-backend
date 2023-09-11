@@ -2,6 +2,7 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
+import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.services.EventService;
 import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,5 +76,12 @@ public class EventsController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Integer eventId) {
         eventService.deleteEvent(eventId);
         return ResponseEntity.status(HttpStatus.OK).build();
+    }
+
+    @PostMapping("/{eventId}/end")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
+    public ResponseEntity<Void> endEvent(@PathVariable Integer eventId, @RequestBody EndEventDetails endEventDetails) {
+        eventService.endEvent(eventId, endEventDetails);
+        return ResponseEntity.ok().build();
     }
 }

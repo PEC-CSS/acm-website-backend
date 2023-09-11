@@ -1,9 +1,10 @@
 package com.pecacm.backend.entities;
 
+import com.pecacm.backend.enums.Branch;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -19,21 +20,27 @@ public class Event {
     @Column(name = "id", unique = true, nullable = false)
     private Integer id;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+    @Column(name = "title", nullable = false)
+    private String title;
 
-    @Column(name = "branch")
-    private String branch;
+    @Enumerated(EnumType.STRING)
+    private Branch branch;
 
-    @Column(name = "date")
-    private Timestamp date;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
 
-    @Column(name="detail", nullable = false)
-    private String detail;
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+    @Column(name="description", nullable = false)
+    private String description;
 
     @Column(name = "attendance_sheet")
     private String attendance;
 
-    @Column(name = "event_status", nullable = false)
-    private String eventStatus;
+    @Column(name = "venue")
+    private String venue;
+
+    @Column(name = "ended")
+    private boolean ended = false;
 }

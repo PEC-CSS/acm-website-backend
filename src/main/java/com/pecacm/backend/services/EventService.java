@@ -2,19 +2,23 @@ package com.pecacm.backend.services;
 
 import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Event;
+import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
+import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
+import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.repository.AttendanceRepository;
 import com.pecacm.backend.repository.EventRepository;
+import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class EventService {
@@ -22,12 +26,14 @@ public class EventService {
     private final EventRepository eventRepository;
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
+    private final TransactionRepository transactionRepository;
 
     @Autowired
-    public EventService(EventRepository eventRepository, AttendanceRepository attendanceRepository, UserRepository userRepository) {
+    public EventService(EventRepository eventRepository, AttendanceRepository attendanceRepository, UserRepository userRepository, TransactionRepository transactionRepository) {
         this.eventRepository = eventRepository;
         this.attendanceRepository = attendanceRepository;
         this.userRepository = userRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     // TODO : change all GET events to pageable repositories
@@ -91,5 +97,70 @@ public class EventService {
         } catch (Exception ex) {
             throw new AcmException("Event cannot be deleted, eventId=" + eventId, HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Transactional
+    public void endEvent(Integer eventId, EndEventDetails endEventDetails) {
+
+        Event event = eventRepository.findById(eventId).orElseThrow(() ->
+                new AcmException("Event not found", HttpStatus.NOT_FOUND)
+        );
+
+        if(event.isEnded()) {
+            throw new AcmException("Event has already ended", HttpStatus.BAD_REQUEST);
+        }
+
+        Map<String, User> userMap = new HashMap<>();
+        Set<String> emails = new HashSet<>();
+
+        emails.addAll(endEventDetails.getContributors());
+        emails.addAll(endEventDetails.getPublicity());
+        emails.addAll(endEventDetails.getParticipants());
+
+        List<User> users = userRepository.findAllByEmail(emails);
+        users.forEach(user -> {
+            userMap.put(user.getEmail(), user);
+        });
+
+        List<Pair<User, EventRole>> eventUsers = new ArrayList<>();
+
+        endEventDetails.getContributors().forEach(email -> {
+            Optional.ofNullable(userMap.get(email)).ifPresent(user -> {
+                eventUsers.add(Pair.of(user, EventRole.ORGANIZER));
+            });
+        });
+        endEventDetails.getPublicity().forEach(email -> {
+            Optional.ofNullable(userMap.get(email)).ifPresent(user -> {
+                eventUsers.add(Pair.of(user, EventRole.PUBLICITY));
+            });
+        });
+        endEventDetails.getParticipants().forEach(email -> {
+            Optional.ofNullable(userMap.get(email)).ifPresent(user -> {
+                eventUsers.add(Pair.of(user, EventRole.PARTICIPANT));
+            });
+        });
+
+        List<Transaction> transactions = eventUsers.stream().map((userEventRolePair) -> {
+            User user = userEventRolePair.getFirst();
+            EventRole eventRole = userEventRolePair.getSecond();
+            Integer xp = endEventDetails.getXp(eventRole);
+
+            user.setXp(user.getXp() + xp);
+
+            return Transaction.builder()
+                    .event(event)
+                    .xp(xp)
+                    .user(user)
+                    .role(eventRole)
+                    .date(LocalDateTime.now())
+                    .build();
+        }).toList();
+
+        transactionRepository.saveAll(transactions);
+        userRepository.saveAll(users);
+
+        event.setEnded(true);
+        eventRepository.save(event);
+
     }
 }
