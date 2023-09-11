@@ -51,4 +51,4 @@ jwt:
   secret: nyanpasu
 verify:
   base:
-    frontend: https://pecacm.vercel.app/
+    frontend: https://pecacm.com/
