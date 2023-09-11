@@ -32,6 +32,12 @@ public class EventsController {
         return ResponseEntity.ok(events);
     }
 
+    @GetMapping("/ongoing")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
+    public ResponseEntity<List<Event>> getOngoingEvents() {
+        return ResponseEntity.ok(eventService.getOngoingEvents());
+    }
+
     @GetMapping("/{eventId}")
     @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<Event> getSingleEvent(@PathVariable Integer eventId){
