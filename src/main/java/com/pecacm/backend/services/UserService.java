@@ -10,7 +10,7 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
 import org.apache.logging.log4j.util.Strings;
-import org.hibernate.id.IntegralDataTypeHolder;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
