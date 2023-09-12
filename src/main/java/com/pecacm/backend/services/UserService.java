@@ -111,7 +111,8 @@ public class UserService implements UserDetailsService {
         return userRepository.countByXpGreaterThan(score) + 1;
     }
 
-    public List<User> getLeaderboard() {
-        return userRepository.findAllByByOrderByXpDesc();
+    public List<User> getLeaderboard(Integer pageSize, Integer pageNum) {
+        Integer offSetSize=(pageNum-1)*pageSize;
+        return userRepository.findAllByByOrderByXpDesc(pageSize,offSetSize);
     }
 }
