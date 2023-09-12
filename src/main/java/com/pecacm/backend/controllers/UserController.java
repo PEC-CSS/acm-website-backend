@@ -110,7 +110,7 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<User>> getLeaderboard(@RequestParam @NonNull Integer pageSize,@RequestParam @NonNull Integer pageNum ) {
-        return ResponseEntity.ok(userService.getLeaderboard(pageSize,pageNum));
+    public ResponseEntity<List<User>> getLeaderboard() {
+        return ResponseEntity.ok(userService.getLeaderboard());
     }
 }
