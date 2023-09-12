@@ -22,4 +22,11 @@ public class HealthController {
     public String hello() {
         return "Hey boi";
     }
+
+    @GetMapping("/boss")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
+    public String secy() {
+        return "Reporting to harsh, and only him.";
+    }
 }
