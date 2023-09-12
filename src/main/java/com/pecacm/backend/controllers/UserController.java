@@ -2,22 +2,25 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.User;
+import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
-import com.pecacm.backend.response.ErrorResponse;
+import com.pecacm.backend.response.RegisterResponse;
 import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,15 +31,15 @@ import java.util.UUID;
 @RequestMapping("/v1/user")
 public class UserController {
 
-    private EmailService emailService;
+    private final EmailService emailService;
 
-    private UserService userService;
+    private final UserService userService;
 
-    private JwtService jwtService;
+    private final JwtService jwtService;
 
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public UserController(EmailService emailService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
@@ -49,11 +52,19 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<AuthenticationResponse> registerUser(@RequestBody User user) {
-        User newUser = userService.addUser(user, passwordEncoder);
-        String jwtToken = jwtService.generateToken(user);
-        emailService.sendVerificationEmail(newUser);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthenticationResponse(jwtToken, newUser));
+    public ResponseEntity<RegisterResponse> registerUser(@RequestBody User user) {
+        userService.addUser(user, passwordEncoder);
+//        emailService.sendVerificationEmail(newUser); REASON : too much latency
+        VerificationToken token = emailService.getVerificationToken(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(token.getToken().toString()));
+    }
+
+    @GetMapping
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<User> getUserInfo() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = (String) authentication.getPrincipal();
+        return ResponseEntity.ok(userService.getUserByEmail(email));
     }
 
     @PostMapping("/login")
@@ -63,13 +74,12 @@ public class UserController {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     request.getEmail(), request.getPassword()
             ));
-        }
-        catch (BadCredentialsException e) {
+        } catch (BadCredentialsException e) {
             throw new AcmException("Incorrect email or password", HttpStatus.UNAUTHORIZED);
         }
         User user = userService.loadUserByUsername(request.getEmail());
-        if(!user.getVerified()) {
-            emailService.sendVerificationEmail(user);
+        if (!user.getVerified()) {
+            throw new AcmException("User not verified, please verify with the link sent to your email.", HttpStatus.UNAUTHORIZED);
         }
         String jwtToken = jwtService.generateToken(user);
         return ResponseEntity.ok(new AuthenticationResponse(jwtToken, user));
@@ -82,7 +92,7 @@ public class UserController {
         return ResponseEntity.ok("Verification successful!");
     }
 
-    @PostMapping("/assignRole")
+    @PostMapping("/assign/role")
     @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public ResponseEntity<String> assignRole(@RequestBody AssignRoleRequest assignRoleRequest) {
         return ResponseEntity.ok(userService.changeRole(assignRoleRequest));
@@ -102,10 +112,5 @@ public class UserController {
     @GetMapping("/leaderboard")
     public ResponseEntity<List<User>> getLeaderboard() {
         return ResponseEntity.ok(userService.getLeaderboard());
-    }
-
-    @ExceptionHandler(AcmException.class)
-    public ResponseEntity<ErrorResponse> handleException(AcmException e) {
-        return ResponseEntity.status(e.getStatus()).body(e.toErrorResponse());
     }
 }

@@ -1,14 +1,17 @@
 package com.pecacm.backend.entities;
 
+import com.pecacm.backend.enums.EventRole;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="events", schema = "public")
+@Table(name="transactions", schema = "public")
 @Builder
 public class Transaction {
     @Id
@@ -24,8 +27,11 @@ public class Transaction {
     @JoinColumn(name = "event_id")
     private Event event;
 
-    @Column(name = "role")
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private EventRole role = EventRole.PARTICIPANT;
+
+    @Column(name = "date")
+    private LocalDateTime date;
 
     @Column(name = "xp_awarded")
     private Integer xp;

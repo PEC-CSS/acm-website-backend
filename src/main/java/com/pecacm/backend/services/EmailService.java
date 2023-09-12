@@ -16,7 +16,7 @@ public class EmailService {
     private final JavaMailSender javaMailSender;
     private final VerificationTokenRepository verificationTokenRepository;
 
-    @Value("${verify.base.backend}") // TODO: change to frontend when ready
+    @Value("${verify.base.frontend}")
     private String hostname;
 
     @Autowired
@@ -34,8 +34,15 @@ public class EmailService {
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Email verification");
         mailMessage.setText(
-                "Click on the link to verify your email: " + hostname + "v1/user/verify?token=" + token.getToken()
+                "Click on the link to verify your email: " + hostname + "verify?token=" + token.getToken()
         );
         javaMailSender.send(mailMessage);
+    }
+
+    @Transactional
+    public VerificationToken getVerificationToken(User user) {
+        return verificationTokenRepository.save(
+                VerificationToken.builder().user(user).build()
+        );
     }
 }
