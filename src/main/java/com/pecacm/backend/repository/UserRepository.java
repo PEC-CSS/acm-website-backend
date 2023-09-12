@@ -32,8 +32,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Long countByXpGreaterThan(Integer xp);
 
-    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT 5")
-    List<User> findAllByByOrderByXpDesc();
+    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT :pageSize OFFSET :offSetsize")
+    List<User> findAllByByOrderByXpDesc(Integer pageSize, Integer offSetSize);
 
 
 }
