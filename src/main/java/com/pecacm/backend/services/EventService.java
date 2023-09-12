@@ -42,6 +42,10 @@ public class EventService {
         return new ArrayList<>(eventRepository.findAll());
     }
 
+    public List<Event> getOngoingEvents() {
+        return eventRepository.findAllByEndedFalse();
+    }
+
     public Event getSingleEvent(Integer eventId) {
         Optional<Event> event = eventRepository.findById(eventId);
         if (event.isEmpty()) {
