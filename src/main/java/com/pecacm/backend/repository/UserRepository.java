@@ -5,6 +5,7 @@ import com.pecacm.backend.enums.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -32,8 +33,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Long countByXpGreaterThan(Integer xp);
 
-    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT :pageSize OFFSET :offSetsize")
-    List<User> findAllByByOrderByXpDesc(Integer pageSize, Integer offSetSize);
+    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT :pageSize OFFSET :offSetSize")
+    List<User> findAllByOrderByXpDesc(Integer pageSize, Integer offSetSize);
 
 
 }
