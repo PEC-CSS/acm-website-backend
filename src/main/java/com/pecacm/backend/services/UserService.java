@@ -112,6 +112,6 @@ public class UserService implements UserDetailsService {
 
     public List<User> getLeaderboard(Integer pageSize, Integer pageNum) {
         Integer offSetSize=(pageNum-1)*pageSize;
-        return userRepository.findAllByByOrderByXpDesc(pageSize,offSetSize);
+        return userRepository.findAllByOrderByXpDesc(pageSize,offSetSize);
     }
 }
