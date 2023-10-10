@@ -152,7 +152,13 @@ public class EventService {
 
             user.setXp(user.getXp() + xp);
 
-            return Transaction.builder().event(event).xp(xp).user(user).role(eventRole).date(LocalDateTime.now()).build();
+            return Transaction.builder()
+                    .event(event)
+                    .xp(xp)
+                    .user(user)
+                    .role(eventRole)
+                    .date(LocalDateTime.now())
+                    .build();
         }).toList();
 
         transactionRepository.saveAll(transactions);
