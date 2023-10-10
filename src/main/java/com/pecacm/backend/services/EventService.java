@@ -37,7 +37,6 @@ public class EventService {
     }
 
     // TODO : change all GET events to pageable repositories
-
     public List<Event> getAllEvents() {
         return new ArrayList<>(eventRepository.findAll());
     }
@@ -166,5 +165,9 @@ public class EventService {
         event.setEnded(true);
         eventRepository.save(event);
 
+    }
+
+    public Event getNextEvent(LocalDateTime currDateTime) {
+        return eventRepository.getNearestEvent(currDateTime);
     }
 }
