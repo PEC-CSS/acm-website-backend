@@ -4,13 +4,21 @@ import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.services.EventService;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
+import org.apache.tomcat.util.bcel.Const;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -89,5 +97,13 @@ public class EventsController {
     public ResponseEntity<Void> endEvent(@PathVariable Integer eventId, @RequestBody EndEventDetails endEventDetails) {
         eventService.endEvent(eventId, endEventDetails);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/next")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
+    public ResponseEntity<Event> nextEvent(@RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) @Nonnull LocalDate date) {
+        LocalDateTime currDateTime = LocalDateTime.of(date, LocalTime.of(0, 0));
+        Event nextEvent = eventService.getNextEvent(currDateTime);
+        return ResponseEntity.ok(nextEvent);
     }
 }
