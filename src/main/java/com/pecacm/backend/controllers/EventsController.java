@@ -2,6 +2,8 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
+import com.pecacm.backend.enums.Branch;
+import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.services.EventService;
 import jakarta.annotation.Nonnull;
@@ -31,9 +33,22 @@ public class EventsController {
 
     @GetMapping
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<List<Event>> getAllEvents() {
+    public ResponseEntity<List<Event>> getAllEvents(@RequestParam @Nullable LocalDate eventsFrom, @RequestParam @Nullable LocalDate eventsTill) {
+
+        if (eventsFrom==null){
+            eventsFrom = LocalDate.now().minusYears(99);
+        }
+        if (eventsTill==null){
+            eventsTill = LocalDate.now();
+        }
+
+        if (eventsFrom.isAfter(eventsTill)) {
+            throw new AcmException("eventsFrom Date must be <= eventsTill Date", HttpStatus.BAD_REQUEST);
+        }
         // TODO : Return pageable response
-        List<Event> events = eventService.getAllEvents();
+
+        List<Event> events = eventService.getEventsBetweenTwoTimestamps(eventsFrom, eventsTill);
+
         return ResponseEntity.ok(events);
     }
 
@@ -53,7 +68,7 @@ public class EventsController {
 
     @GetMapping("/branches/{branch}")
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<List<Event>> getEventsByBranch(@PathVariable String branch){
+    public ResponseEntity<List<Event>> getEventsByBranch(@PathVariable Branch branch){
         // TODO : Return pageable response
         List<Event> events = eventService.getEventsByBranch(branch);
         return ResponseEntity.ok(events);

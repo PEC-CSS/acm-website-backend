@@ -4,6 +4,7 @@ import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
+import com.pecacm.backend.enums.Branch;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
@@ -13,10 +14,13 @@ import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
+import org.springframework.cglib.core.Predicate;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -28,7 +32,6 @@ public class EventService {
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
 
-    @Autowired
     public EventService(EventRepository eventRepository, AttendanceRepository attendanceRepository, UserRepository userRepository, TransactionRepository transactionRepository) {
         this.eventRepository = eventRepository;
         this.attendanceRepository = attendanceRepository;
@@ -37,8 +40,13 @@ public class EventService {
     }
 
     // TODO : change all GET events to pageable repositories
-    public List<Event> getAllEvents() {
-        return new ArrayList<>(eventRepository.findAll());
+
+    public List<Event> getEventsBetweenTwoTimestamps(LocalDate eventsFrom, LocalDate eventsTill) {
+        return eventRepository
+                .findAllByStartDateGreaterThanEqualAndEndDateLessThanEqual(
+                        eventsFrom.atStartOfDay(),
+                        eventsTill.plusDays(1).atStartOfDay()
+                );
     }
 
     public List<Event> getOngoingEvents() {
@@ -53,15 +61,13 @@ public class EventService {
         return event.get();
     }
 
-    public List<Event> getEventsByBranch(String branch) {
+    public List<Event> getEventsByBranch(Branch branch) {
         return eventRepository.findByBranch(branch);
     }
 
     public List<Event> getUserEvents(Integer userId) {
         List<Event> events = new ArrayList<>();
-        attendanceRepository.findByUserId(userId).forEach(
-                attendance -> events.add(attendance.getEvent())
-        );
+        attendanceRepository.findByUserId(userId).forEach(attendance -> events.add(attendance.getEvent()));
         return events;
     }
 
@@ -71,9 +77,7 @@ public class EventService {
         if (user.isEmpty()) {
             throw new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        attendanceRepository.findByUserIdAndRole(userId, role).forEach(
-                attendance -> events.add(attendance.getEvent())
-        );
+        attendanceRepository.findByUserIdAndRole(userId, role).forEach(attendance -> events.add(attendance.getEvent()));
         return events;
     }
 
@@ -105,11 +109,9 @@ public class EventService {
     @Transactional
     public void endEvent(Integer eventId, EndEventDetails endEventDetails) {
 
-        Event event = eventRepository.findById(eventId).orElseThrow(() ->
-                new AcmException("Event not found", HttpStatus.NOT_FOUND)
-        );
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new AcmException("Event not found", HttpStatus.NOT_FOUND));
 
-        if(event.isEnded()) {
+        if (event.isEnded()) {
             throw new AcmException("Event has already ended", HttpStatus.BAD_REQUEST);
         }
 
