@@ -11,6 +11,8 @@ import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -110,7 +112,9 @@ public class UserService implements UserDetailsService {
         return userRepository.countByXpGreaterThan(score) + 1;
     }
 
-    public List<User> getLeaderboard() {
-        return userRepository.findAllByByOrderByXpDesc();
+    public Page<User> getLeaderboard(Integer offset, Integer pageSize) {
+        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize));
     }
+
+    public Page<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) { return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize)); }
 }

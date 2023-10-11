@@ -11,10 +11,11 @@ import com.pecacm.backend.response.RegisterResponse;
 import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.awt.print.Pageable;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +43,6 @@ public class UserController {
 
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
     public UserController(EmailService emailService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.emailService = emailService;
         this.userService = userService;
@@ -110,7 +111,25 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<User>> getLeaderboard() {
-        return ResponseEntity.ok(userService.getLeaderboard());
+    public ResponseEntity<Page<User>> getLeaderboard(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = Integer.MAX_VALUE; // user count will never exceed a billion
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity.ok(userService.getLeaderboard(offset, pageSize));
+    }
+
+    @GetMapping("/leaderboard/{batch}")
+    public ResponseEntity<Page<User>> getLeaderboardByBatch(@PathVariable Integer batch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = Integer.MAX_VALUE; // user count will never exceed a billion
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        Page<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
+        return ResponseEntity.ok(users);
     }
 }
