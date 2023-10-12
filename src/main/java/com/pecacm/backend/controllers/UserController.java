@@ -132,4 +132,12 @@ public class UserController {
         Page<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
         return ResponseEntity.ok(users);
     }
+
+    @PutMapping
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<User> updateUser(@RequestBody User user) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User updatedUser = userService.updateUser(user, email);
+        return (updatedUser == null) ? ResponseEntity.badRequest().build() : ResponseEntity.ok(updatedUser);
+    }
 }
