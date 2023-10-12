@@ -102,6 +102,7 @@ public class EventsController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Integer eventId) {
         eventService.deleteEvent(eventId);
         return ResponseEntity.status(HttpStatus.OK).build();
+
     }
 
     @PostMapping("/{eventId}/end")

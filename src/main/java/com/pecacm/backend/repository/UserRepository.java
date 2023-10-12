@@ -2,6 +2,8 @@ package com.pecacm.backend.repository;
 
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.enums.Role;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("SELECT u FROM User u WHERE u.email in :emails")
     List<User> findAllByEmail(Collection<String> emails);
 
+    Page<User> findAllByBatch(int batch, PageRequest pageRequest);
+
     @Query("SELECT u.designation FROM User u " +
            "WHERE u.email = :email")
     Optional<Role> findRoleByEmail(String email);
@@ -32,8 +36,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Long countByXpGreaterThan(Integer xp);
 
-    @Query("SELECT u FROM User u ORDER BY u.xp DESC LIMIT 5")
-    List<User> findAllByByOrderByXpDesc();
-
-
+    Page<User> findAllByOrderByXpDesc(PageRequest pageRequest);
 }
