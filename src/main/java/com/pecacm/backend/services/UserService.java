@@ -19,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -112,5 +114,15 @@ public class UserService implements UserDetailsService {
 
     public List<User> getLeaderboard() {
         return userRepository.findAllByByOrderByXpDesc();
+    }
+
+    public User updateUser(User updatedUser, String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty() || !Objects.equals(user.get().getEmail(), email)) {
+            throw new AcmException("User cannot be updated", HttpStatus.BAD_REQUEST);
+        }
+        updatedUser.setId(user.get().getId());
+        updatedUser.setEmail(user.get().getEmail());
+        return userRepository.save(updatedUser);
     }
 }

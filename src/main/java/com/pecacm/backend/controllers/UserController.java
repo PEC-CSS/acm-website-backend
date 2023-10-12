@@ -113,4 +113,12 @@ public class UserController {
     public ResponseEntity<List<User>> getLeaderboard() {
         return ResponseEntity.ok(userService.getLeaderboard());
     }
+
+    @PutMapping
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<User> updateUser(@RequestBody User user) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User updatedUser = userService.updateUser(user, email);
+        return (updatedUser == null) ? ResponseEntity.badRequest().build() : ResponseEntity.ok(updatedUser);
+    }
 }
