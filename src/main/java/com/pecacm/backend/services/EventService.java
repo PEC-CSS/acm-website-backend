@@ -59,13 +59,17 @@ public class EventService {
         return eventRepository.findByBranch(branch);
     }
 
-    public List<Event> getUserEventsByRole(Integer userId, EventRole eventRole) {
-        Optional<User> user = userRepository.findById(userId);
+    public List<Event> getUserEventsByRole(String email, EventRole eventRole) {
+        Optional<User> user = userRepository.findByEmail(email);
         List<Event> events = new ArrayList<>();
         if (user.isEmpty()) {
             throw new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        transactionRepository.findByUserIdAndRole(userId, eventRole).forEach(transaction -> events.add(transaction.getEvent()));
+        if (eventRole == null) {
+            transactionRepository.findByUserId(user.get().getId()).forEach(transaction -> events.add(transaction.getEvent()));
+        } else {
+            transactionRepository.findByUserIdAndRole(user.get().getId(), eventRole).forEach(transaction -> events.add(transaction.getEvent()));
+        }
         return events;
     }
 

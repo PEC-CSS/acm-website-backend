@@ -14,6 +14,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -75,13 +76,14 @@ public class EventsController {
         return ResponseEntity.ok(events);
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<Event>> getUserEventsByRole(@PathVariable Integer userId, @RequestParam("role") @Nullable EventRole eventRole) {
+    public ResponseEntity<List<Event>> getUserEventsByRole(@RequestParam("role") @Nullable EventRole eventRole) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (eventRole == null){
-            return ResponseEntity.ok(eventService.getUserEventsByRole(userId, EventRole.PARTICIPANT));
+            return ResponseEntity.ok(eventService.getUserEventsByRole(email, null));
         }
-        return ResponseEntity.ok(eventService.getUserEventsByRole(userId, eventRole));
+        return ResponseEntity.ok(eventService.getUserEventsByRole(email, eventRole));
     }
 
     @PostMapping
