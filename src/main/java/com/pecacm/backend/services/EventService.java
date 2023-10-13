@@ -8,14 +8,10 @@ import com.pecacm.backend.enums.Branch;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
-import com.pecacm.backend.repository.AttendanceRepository;
 import com.pecacm.backend.repository.EventRepository;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
-import org.springframework.cglib.core.Predicate;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,13 +24,11 @@ import java.util.*;
 public class EventService {
 
     private final EventRepository eventRepository;
-    private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
 
-    public EventService(EventRepository eventRepository, AttendanceRepository attendanceRepository, UserRepository userRepository, TransactionRepository transactionRepository) {
+    public EventService(EventRepository eventRepository, UserRepository userRepository, TransactionRepository transactionRepository) {
         this.eventRepository = eventRepository;
-        this.attendanceRepository = attendanceRepository;
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
     }
@@ -65,19 +59,17 @@ public class EventService {
         return eventRepository.findByBranch(branch);
     }
 
-    public List<Event> getUserEvents(Integer userId) {
-        List<Event> events = new ArrayList<>();
-        attendanceRepository.findByUserId(userId).forEach(attendance -> events.add(attendance.getEvent()));
-        return events;
-    }
-
-    public List<Event> getUserEventsByRole(Integer userId, String role) {
-        Optional<User> user = userRepository.findById(userId);
+    public List<Event> getUserEventsByRole(String email, EventRole eventRole) {
+        Optional<User> user = userRepository.findByEmail(email);
         List<Event> events = new ArrayList<>();
         if (user.isEmpty()) {
             throw new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
-        attendanceRepository.findByUserIdAndRole(userId, role).forEach(attendance -> events.add(attendance.getEvent()));
+        if (eventRole == null) {
+            transactionRepository.findByUserId(user.get().getId()).forEach(transaction -> events.add(transaction.getEvent()));
+        } else {
+            transactionRepository.findByUserIdAndRole(user.get().getId(), eventRole).forEach(transaction -> events.add(transaction.getEvent()));
+        }
         return events;
     }
 
