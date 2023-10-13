@@ -3,6 +3,7 @@ package com.pecacm.backend.controllers;
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.enums.Branch;
+import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.services.EventService;
@@ -76,11 +77,11 @@ public class EventsController {
 
     @GetMapping("/user/{userId}")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<Event>> getUserEventsByRole(@PathVariable Integer userId, @RequestParam("role") @Nullable String role) {
-        if (role == null){
-            return ResponseEntity.ok(eventService.getUserEvents(userId));
+    public ResponseEntity<List<Event>> getUserEventsByRole(@PathVariable Integer userId, @RequestParam("role") @Nullable EventRole eventRole) {
+        if (eventRole == null){
+            return ResponseEntity.ok(eventService.getUserEventsByRole(userId, EventRole.PARTICIPANT));
         }
-        return ResponseEntity.ok(eventService.getUserEventsByRole(userId, role));
+        return ResponseEntity.ok(eventService.getUserEventsByRole(userId, eventRole));
     }
 
     @PostMapping
