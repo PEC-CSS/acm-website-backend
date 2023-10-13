@@ -8,7 +8,7 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
-import com.pecacm.backend.services.EmailService;
+import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
 import org.springframework.data.domain.Page;
@@ -25,15 +25,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.print.Pageable;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/user")
 public class UserController {
 
-    private final EmailService emailService;
+    private final VerificationService verificationService;
 
     private final UserService userService;
 
@@ -43,8 +41,8 @@ public class UserController {
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(EmailService emailService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
-        this.emailService = emailService;
+    public UserController(VerificationService verificationService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+        this.verificationService = verificationService;
         this.userService = userService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -55,8 +53,7 @@ public class UserController {
     @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody User user) {
         userService.addUser(user, passwordEncoder);
-//        emailService.sendVerificationEmail(newUser); REASON : too much latency
-        VerificationToken token = emailService.getVerificationToken(user);
+        VerificationToken token = verificationService.getVerificationToken(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(token.getToken().toString()));
     }
 
