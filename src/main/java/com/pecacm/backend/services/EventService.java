@@ -12,6 +12,7 @@ import com.pecacm.backend.repository.EventRepository;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -59,16 +60,18 @@ public class EventService {
         return eventRepository.findByBranch(branch);
     }
 
-    public List<Event> getUserEventsByRole(String email, EventRole eventRole) {
+    public List<Event> getUserEventsByRole(String email, EventRole eventRole, Integer offset, Integer pageSize) {
         Optional<User> user = userRepository.findByEmail(email);
         List<Event> events = new ArrayList<>();
         if (user.isEmpty()) {
             throw new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
         }
         if (eventRole == null) {
-            transactionRepository.findByUserId(user.get().getId()).forEach(transaction -> events.add(transaction.getEvent()));
+            transactionRepository.findByUserId(user.get().getId(), PageRequest.of(offset, pageSize))
+                    .forEach(transaction -> events.add(transaction.getEvent()));
         } else {
-            transactionRepository.findByUserIdAndRole(user.get().getId(), eventRole).forEach(transaction -> events.add(transaction.getEvent()));
+            transactionRepository.findByUserIdAndRole(user.get().getId(), eventRole, PageRequest.of(offset, pageSize))
+                    .forEach(transaction -> events.add(transaction.getEvent()));
         }
         return events;
     }

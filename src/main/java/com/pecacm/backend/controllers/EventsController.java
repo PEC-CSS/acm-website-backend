@@ -78,12 +78,16 @@ public class EventsController {
 
     @GetMapping("/user")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<Event>> getUserEventsByRole(@RequestParam("role") @Nullable EventRole eventRole) {
+    public ResponseEntity<List<Event>> getUserEventsByRole(@RequestParam("role") @Nullable EventRole eventRole, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 events
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (eventRole == null){
-            return ResponseEntity.ok(eventService.getUserEventsByRole(email, null));
-        }
-        return ResponseEntity.ok(eventService.getUserEventsByRole(email, eventRole));
+        return ResponseEntity.ok(eventService.getUserEventsByRole(email, eventRole, offset, pageSize));
     }
 
     @PostMapping
