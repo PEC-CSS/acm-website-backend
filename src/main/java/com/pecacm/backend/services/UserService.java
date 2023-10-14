@@ -47,6 +47,7 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Integer batch = 2004 + Math.floorDiv(user.getSid(), 1000000); // hacky fix
         user.setBatch(batch);
+        user.setVerified(false);
         userRepository.save(user);
     }
 
