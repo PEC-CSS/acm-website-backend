@@ -1,6 +1,7 @@
 package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
+import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.exception.AcmException;
@@ -112,5 +113,13 @@ public class UserController {
     @GetMapping("/leaderboard")
     public ResponseEntity<List<User>> getLeaderboard() {
         return ResponseEntity.ok(userService.getLeaderboard());
+    }
+
+    @GetMapping("/transaction")
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<List<Transaction>> getUserTransactions() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = (String) authentication.getPrincipal();
+        return ResponseEntity.ok(userService.getUserTransactions(email));
     }
 }
