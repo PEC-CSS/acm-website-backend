@@ -17,23 +17,26 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SupportService {
     private final TransactionRepository transactionRepository;
+    private final UserService userService;
 
-    public SupportService(TransactionRepository transactionRepository) {
+    public SupportService(TransactionRepository transactionRepository, UserService userService) {
         this.transactionRepository = transactionRepository;
+        this.userService = userService;
     }
 
-    public SupportUserResponse getSupportUserDetails(User user, PageRequest pageRequest) {
+    public SupportUserResponse getSupportUserDetails(String email, PageRequest pageRequest) {
+        User user = userService.getUserByEmail(email);
         Page<Transaction> transactions = transactionRepository.findByUserId(user.getId(), pageRequest);
-        List<UserEventDetails> events = new ArrayList<>();
-        transactions.forEach(transaction -> {
-            Event event = transaction.getEvent();
-            UserEventDetails userEventDetails = new UserEventDetails(event.getId(), event.getTitle(), transaction.getRole(), transaction.getXp(), event.getEndDate());
-            events.add(userEventDetails);
-        });
+        List<UserEventDetails> events = transactions.stream()
+                .map(transaction -> {
+                    Event event = transaction.getEvent();
+                    return new UserEventDetails(event.getId(), event.getTitle(), transaction.getRole(), transaction.getXp(), event.getEndDate());
+                }).collect(Collectors.toList());
         Page<UserEventDetails> eventsPage = new PageImpl<>(events, pageRequest, events.size());
         return new SupportUserResponse(user, eventsPage);
     }
@@ -57,12 +60,11 @@ public class SupportService {
     }
 
     public Page<EventUserDetails> getEventParticipants(Event event, PageRequest pageRequest) {
-        List<EventUserDetails> participants = new ArrayList<>();
-        transactionRepository.findByEventIdAndRole(event.getId(), EventRole.PARTICIPANT, pageRequest).forEach(transaction -> {
-            User user = transaction.getUser();
-            EventUserDetails eventUserDetails = new EventUserDetails(user.getId(), user.getEmail(), user.getName(), user.getDp());
-            participants.add(eventUserDetails);
-        });
+        List<EventUserDetails> participants = transactionRepository.findByEventIdAndRole(event.getId(), EventRole.PARTICIPANT, pageRequest)
+                .stream().map(transaction -> {
+                    User user = transaction.getUser();
+                    return new EventUserDetails(user.getId(), user.getEmail(), user.getName(), user.getDp());
+                }).collect(Collectors.toList());
 
         return new PageImpl<>(participants, pageRequest, participants.size());
     }

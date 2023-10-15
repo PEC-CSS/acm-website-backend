@@ -46,8 +46,7 @@ public class SupportController {
         if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
         if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
 
-        User user = userService.getUserByEmail(email);
-        return ResponseEntity.ok(supportService.getSupportUserDetails(user, PageRequest.of(offset, pageSize)));
+        return ResponseEntity.ok(supportService.getSupportUserDetails(email, PageRequest.of(offset, pageSize)));
     }
 
     @GetMapping("/events/{eventId}")
