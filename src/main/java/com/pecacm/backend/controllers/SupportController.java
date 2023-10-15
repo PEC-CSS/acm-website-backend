@@ -2,7 +2,6 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
-import com.pecacm.backend.entities.User;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.response.EventUserDetails;
 import com.pecacm.backend.response.SupportEventResponse;
@@ -11,7 +10,6 @@ import com.pecacm.backend.services.EventService;
 import com.pecacm.backend.services.SupportService;
 import com.pecacm.backend.services.UserService;
 import jakarta.annotation.Nullable;
-import org.apache.tomcat.util.bcel.Const;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.util.Pair;
@@ -27,12 +25,10 @@ import java.util.List;
 public class SupportController {
 
     private final SupportService supportService;
-    private final UserService userService;
     private final EventService eventService;
 
-    public SupportController(SupportService supportService, UserService userService, EventService eventService) {
+    public SupportController(SupportService supportService, EventService eventService) {
         this.supportService = supportService;
-        this.userService = userService;
         this.eventService = eventService;
     }
 
