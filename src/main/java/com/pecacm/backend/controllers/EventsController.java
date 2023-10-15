@@ -3,6 +3,7 @@ package com.pecacm.backend.controllers;
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.enums.Branch;
+import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.services.EventService;
@@ -13,6 +14,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -74,13 +76,18 @@ public class EventsController {
         return ResponseEntity.ok(events);
     }
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<Event>> getUserEventsByRole(@PathVariable Integer userId, @RequestParam("role") @Nullable String role) {
-        if (role == null){
-            return ResponseEntity.ok(eventService.getUserEvents(userId));
-        }
-        return ResponseEntity.ok(eventService.getUserEventsByRole(userId, role));
+    public ResponseEntity<List<Event>> getUserEventsByRole(@RequestParam("role") @Nullable EventRole eventRole, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 events
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(eventService.getUserEventsByRole(email, eventRole, offset, pageSize));
     }
 
     @PostMapping
@@ -102,6 +109,7 @@ public class EventsController {
     public ResponseEntity<Void> deleteEvent(@PathVariable Integer eventId) {
         eventService.deleteEvent(eventId);
         return ResponseEntity.status(HttpStatus.OK).build();
+
     }
 
     @PostMapping("/{eventId}/end")

@@ -9,13 +9,14 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
-import com.pecacm.backend.services.EmailService;
+import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,7 +33,7 @@ import java.util.UUID;
 @RequestMapping("/v1/user")
 public class UserController {
 
-    private final EmailService emailService;
+    private final VerificationService verificationService;
 
     private final UserService userService;
 
@@ -42,9 +43,8 @@ public class UserController {
 
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public UserController(EmailService emailService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
-        this.emailService = emailService;
+    public UserController(VerificationService verificationService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+        this.verificationService = verificationService;
         this.userService = userService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -55,8 +55,7 @@ public class UserController {
     @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<RegisterResponse> registerUser(@RequestBody User user) {
         userService.addUser(user, passwordEncoder);
-//        emailService.sendVerificationEmail(newUser); REASON : too much latency
-        VerificationToken token = emailService.getVerificationToken(user);
+        VerificationToken token = verificationService.getVerificationToken(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponse(token.getToken().toString()));
     }
 
@@ -111,15 +110,41 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<List<User>> getLeaderboard() {
-        return ResponseEntity.ok(userService.getLeaderboard());
+    public ResponseEntity<Page<User>> getLeaderboard(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        return ResponseEntity.ok(userService.getLeaderboard(offset, pageSize));
+    }
+
+    @GetMapping("/leaderboard/{batch}")
+    public ResponseEntity<Page<User>> getLeaderboardByBatch(@PathVariable Integer batch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        Page<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
+        return ResponseEntity.ok(users);
+    }
+
+    @PutMapping
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<User> updateUser(@RequestBody User user) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User updatedUser = userService.updateUser(user, email);
+        return (updatedUser == null) ? ResponseEntity.badRequest().build() : ResponseEntity.ok(updatedUser);
     }
 
     @GetMapping("/transaction")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<Transaction>> getUserTransactions() {
+    public ResponseEntity<List<Transaction>> getUserTransactions(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = (String) authentication.getPrincipal();
-        return ResponseEntity.ok(userService.getUserTransactions(email));
+        return ResponseEntity.ok(userService.getUserTransactions(email, offset, pageSize));
     }
 }

@@ -1,6 +1,9 @@
 # acm-website-backend
 Backend of the official website of PEC ACM CSS
 
+## docs
+[API DOCS](API_DOCS.md)
+
 ## Pre Requisites
 
 1. Java 17(Oracle or Corretto) installed.
@@ -13,9 +16,7 @@ Backend of the official website of PEC ACM CSS
     ```bash
     docker compose up
     ```
-3. Add the Email/password of gmail in `application-local.yml` file under `spring.mail` key, to connect to smtp server and send mails.
-   - DO NOT PUSH THIS FILE 
-4. Code and push
+3. Code and push
 
 ## Instructions
 

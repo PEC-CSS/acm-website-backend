@@ -13,6 +13,8 @@ import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,8 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -51,6 +52,7 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Integer batch = 2004 + Math.floorDiv(user.getSid(), 1000000); // hacky fix
         user.setBatch(batch);
+        user.setVerified(false);
         userRepository.save(user);
     }
 
@@ -115,11 +117,50 @@ public class UserService implements UserDetailsService {
         return userRepository.countByXpGreaterThan(score) + 1;
     }
 
-    public List<User> getLeaderboard() {
-        return userRepository.findAllByByOrderByXpDesc();
+    public Page<User> getLeaderboard(Integer offset, Integer pageSize) {
+        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize));
     }
 
-    public List<Transaction> getUserTransactions(String email) {
-        return transactionRepository.findByUser_EmailOrderByDateDesc(email);
+    public User updateUser(User updatedUser, String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty() || !Objects.equals(user.get().getEmail(), email)) {
+            throw new AcmException("User cannot be updated", HttpStatus.BAD_REQUEST);
+        }
+
+        User existingUser = user.get();
+
+        //User can only change these: name, branch, dp, sid
+        //TODO: Iterate over fields instead of manually setting each
+        try {
+
+            if (updatedUser.getName() != null) {
+                existingUser.setName(updatedUser.getName());
+            }
+            if (updatedUser.getDp() != null) {
+                existingUser.setDp(updatedUser.getDp());
+            }
+            if (updatedUser.getBranch() != null) {
+                existingUser.setBranch(updatedUser.getBranch());
+            }
+            if (updatedUser.getSid() != null) {
+                existingUser.setSid(updatedUser.getSid());
+                existingUser.setBatch(2004 + Math.floorDiv(updatedUser.getSid(), 1000000));
+            }
+
+            return userRepository.save(existingUser);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+            throw new AcmException("Please fill the details carefully.", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public Page<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
+        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize));
+    }
+
+    public List<Transaction> getUserTransactions(String email, Integer offset, Integer pageSize) {
+        List<Transaction> transactions = new ArrayList<>();
+        transactionRepository.findByUser_EmailOrderByDateDesc(email, PageRequest.of(offset, pageSize)).forEach(transactions::add);
+        return transactions;
     }
 }
