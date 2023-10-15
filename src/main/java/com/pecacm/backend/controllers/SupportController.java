@@ -8,7 +8,6 @@ import com.pecacm.backend.response.SupportEventResponse;
 import com.pecacm.backend.response.SupportUserResponse;
 import com.pecacm.backend.services.EventService;
 import com.pecacm.backend.services.SupportService;
-import com.pecacm.backend.services.UserService;
 import jakarta.annotation.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
