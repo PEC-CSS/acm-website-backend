@@ -65,9 +65,9 @@ public class EventService {
 
     public EventAttendeesResponse getEventUsersByRole(Integer eventId, EventRole eventRole, PageRequest pageRequest) {
         if (eventRole == null) {
-            Pair<List<EventUserDetails>, List<EventUserDetails>> nonParticipants = supportService.getNonParticipants(eventId);
+            Pair<List<EventUserDetails>, List<EventUserDetails>> organizingTeam = supportService.getNonParticipants(eventId);
             List<EventUserDetails> participants = supportService.getEventParticipants(eventId, pageRequest);
-            return new EventAttendeesResponse(nonParticipants.getFirst(), nonParticipants.getSecond(), participants);
+            return new EventAttendeesResponse(organizingTeam.getFirst(), organizingTeam.getSecond(), participants);
         } else {
             List<EventUserDetails> attendees = transactionRepository.findByEventIdAndRole(eventId, eventRole, pageRequest)
                     .stream().map(transaction -> {

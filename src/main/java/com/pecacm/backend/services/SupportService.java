@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class SupportService {
@@ -36,7 +35,7 @@ public class SupportService {
                 .map(transaction -> {
                     Event event = transaction.getEvent();
                     return new UserEventDetails(event.getId(), event.getTitle(), transaction.getRole(), transaction.getXp(), event.getEndDate());
-                }).collect(Collectors.toList());
+                }).toList();
         Page<UserEventDetails> eventsPage = new PageImpl<>(events, pageRequest, events.size());
         return new SupportUserResponse(user, eventsPage);
     }
