@@ -117,8 +117,8 @@ public class UserService implements UserDetailsService {
         return userRepository.countByXpGreaterThan(score) + 1;
     }
 
-    public Page<User> getLeaderboard(Integer offset, Integer pageSize) {
-        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize));
+    public List<User> getLeaderboard(Integer offset, Integer pageSize) {
+        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize)).getContent();
     }
 
     public User updateUser(User updatedUser, String email) {
@@ -154,8 +154,8 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public Page<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
-        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize));
+    public List<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
+        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize)).getContent();
     }
 
     public List<UserEventDetails> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
