@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class SupportService {
@@ -36,7 +35,7 @@ public class SupportService {
                 .map(transaction -> {
                     Event event = transaction.getEvent();
                     return new UserEventDetails(event.getId(), event.getTitle(), transaction.getRole(), transaction.getXp(), event.getEndDate());
-                }).collect(Collectors.toList());
+                }).toList();
         Page<UserEventDetails> eventsPage = new PageImpl<>(events, pageRequest, events.size());
         return new SupportUserResponse(user, eventsPage);
     }
@@ -59,13 +58,11 @@ public class SupportService {
         return Pair.of(contributors, publicity);
     }
 
-    public Page<EventUserDetails> getEventParticipants(Event event, PageRequest pageRequest) {
-        List<EventUserDetails> participants = transactionRepository.findByEventIdAndRole(event.getId(), EventRole.PARTICIPANT, pageRequest)
+    public List<EventUserDetails> getEventParticipants(Integer eventId, PageRequest pageRequest) {
+        return transactionRepository.findByEventIdAndRole(eventId, EventRole.PARTICIPANT, pageRequest)
                 .stream().map(transaction -> {
                     User user = transaction.getUser();
                     return new EventUserDetails(user.getId(), user.getEmail(), user.getName(), user.getDp());
-                }).collect(Collectors.toList());
-
-        return new PageImpl<>(participants, pageRequest, participants.size());
+                }).toList();
     }
 }

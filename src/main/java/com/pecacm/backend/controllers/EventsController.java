@@ -6,15 +6,16 @@ import com.pecacm.backend.enums.Branch;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
+import com.pecacm.backend.response.EventAttendeesResponse;
 import com.pecacm.backend.services.EventService;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -76,18 +77,17 @@ public class EventsController {
         return ResponseEntity.ok(events);
     }
 
-    @GetMapping("/user")
+    @GetMapping("/{eventId}/user")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<Event>> getUserEventsByRole(@RequestParam("role") @Nullable EventRole eventRole, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+    public ResponseEntity<EventAttendeesResponse> getEventUsersByRole(@PathVariable Integer eventId, @RequestParam("role") @Nullable EventRole eventRole, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
 
         if (offset == null) offset = 0;
-        if (pageSize == null) pageSize = 20; // returning first 20 events
+        if (pageSize == null) pageSize = 20;
 
         if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
         if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
 
-        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(eventService.getUserEventsByRole(email, eventRole, offset, pageSize));
+        return ResponseEntity.ok(eventService.getEventUsersByRole(eventId, eventRole, PageRequest.of(offset, pageSize)));
     }
 
     @PostMapping

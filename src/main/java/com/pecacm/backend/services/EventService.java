@@ -1,6 +1,5 @@
 package com.pecacm.backend.services;
 
-import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
@@ -11,6 +10,8 @@ import com.pecacm.backend.model.EndEventDetails;
 import com.pecacm.backend.repository.EventRepository;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
+import com.pecacm.backend.response.EventAttendeesResponse;
+import com.pecacm.backend.response.EventUserDetails;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.util.Pair;
@@ -27,11 +28,13 @@ public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
+    private final SupportService supportService;
 
-    public EventService(EventRepository eventRepository, UserRepository userRepository, TransactionRepository transactionRepository) {
+    public EventService(EventRepository eventRepository, UserRepository userRepository, TransactionRepository transactionRepository, SupportService supportService) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.transactionRepository = transactionRepository;
+        this.supportService = supportService;
     }
 
     // TODO : change all GET events to pageable repositories
@@ -60,20 +63,24 @@ public class EventService {
         return eventRepository.findByBranch(branch);
     }
 
-    public List<Event> getUserEventsByRole(String email, EventRole eventRole, Integer offset, Integer pageSize) {
-        Optional<User> user = userRepository.findByEmail(email);
-        List<Event> events = new ArrayList<>();
-        if (user.isEmpty()) {
-            throw new AcmException(ErrorConstants.USER_NOT_FOUND, HttpStatus.NOT_FOUND);
-        }
+    public EventAttendeesResponse getEventUsersByRole(Integer eventId, EventRole eventRole, PageRequest pageRequest) {
         if (eventRole == null) {
-            transactionRepository.findByUserId(user.get().getId(), PageRequest.of(offset, pageSize))
-                    .forEach(transaction -> events.add(transaction.getEvent()));
+            Pair<List<EventUserDetails>, List<EventUserDetails>> organizingTeam = supportService.getNonParticipants(eventId);
+            List<EventUserDetails> participants = supportService.getEventParticipants(eventId, pageRequest);
+            return new EventAttendeesResponse(organizingTeam.getFirst(), organizingTeam.getSecond(), participants);
         } else {
-            transactionRepository.findByUserIdAndRole(user.get().getId(), eventRole, PageRequest.of(offset, pageSize))
-                    .forEach(transaction -> events.add(transaction.getEvent()));
+            List<EventUserDetails> attendees = transactionRepository.findByEventIdAndRole(eventId, eventRole, pageRequest)
+                    .stream().map(transaction -> {
+                        User user = transaction.getUser();
+                        return new EventUserDetails(user.getId(), user.getEmail(), user.getName(), user.getDp());
+                    }).toList();
+
+            return switch (eventRole) {
+                case ORGANIZER -> new EventAttendeesResponse(attendees, new ArrayList<>(), new ArrayList<>());
+                case PUBLICITY -> new EventAttendeesResponse(new ArrayList<>(), attendees, new ArrayList<>());
+                case PARTICIPANT -> new EventAttendeesResponse(new ArrayList<>(), new ArrayList<>(), attendees);
+            };
         }
-        return events;
     }
 
     public Event createEvent(Event event) {
