@@ -23,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -67,7 +68,11 @@ public class UserService implements UserDetailsService {
         VerificationToken token = verificationTokenRepository.findById(tokenId).orElseThrow(() ->
                 new AcmException("Verification token not found", HttpStatus.NOT_FOUND)
         );
-        // TODO: check token expiration
+        LocalDateTime currentDate = LocalDateTime.now();
+        boolean tokenExpired = token.getCreatedDate().isBefore(currentDate.minusDays(3));
+        if (tokenExpired){
+            throw new AcmException("Token Expired", HttpStatus.NOT_FOUND);
+        }
         User user = token.getUser();
         user.setVerified(true);
         verificationTokenRepository.deleteById(tokenId);
