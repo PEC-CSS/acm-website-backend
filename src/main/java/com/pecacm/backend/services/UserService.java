@@ -162,12 +162,12 @@ public class UserService implements UserDetailsService {
         return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize));
     }
 
-    public Page<UserEventResponse> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
+    public List<UserEventResponse> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserIdAndRole(user.getId(), eventRole, PageRequest.of(offset, pageSize));
 
-        List<UserEventResponse> eventResponseList = transactionsPage.getContent().stream()
+        return transactionsPage.getContent().stream()
                 .map(transaction -> new UserEventResponse(
                         transaction.getEvent().getId(),
                         transaction.getEvent().getTitle(),
@@ -176,16 +176,14 @@ public class UserService implements UserDetailsService {
                         transaction.getEvent().getEndDate()
                 ))
                 .toList();
-
-        return new PageImpl<>(eventResponseList, transactionsPage.getPageable(), transactionsPage.getTotalElements());
     }
 
-    public Page<UserEventResponse> getEventsForUser(Integer pageSize, Integer offset) {
+    public List<UserEventResponse> getEventsForUser(Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserId(user.getId(), PageRequest.of(offset, pageSize));
 
-        List<UserEventResponse> eventResponseList = transactionsPage.getContent().stream()
+        return transactionsPage.getContent().stream()
                 .map(transaction -> new UserEventResponse(
                         transaction.getEvent().getId(),
                         transaction.getEvent().getTitle(),
@@ -194,7 +192,5 @@ public class UserService implements UserDetailsService {
                         transaction.getEvent().getEndDate()
                 ))
                 .toList();
-
-        return new PageImpl<>(eventResponseList, transactionsPage.getPageable(), transactionsPage.getTotalElements());
     }
 }
