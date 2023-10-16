@@ -72,7 +72,7 @@ public class UserService implements UserDetailsService {
         LocalDateTime currentDate = LocalDateTime.now();
         boolean tokenExpired = token.getCreatedDate().isBefore(currentDate.minusDays(3));
         if (tokenExpired){
-            throw new AcmException("Token Expired", HttpStatus.NOT_FOUND)
+            throw new AcmException("Token Expired", HttpStatus.NOT_FOUND);
         }
         User user = token.getUser();
         user.setVerified(true);
