@@ -13,10 +13,11 @@ import java.util.List;
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Integer> {
     Page<Transaction> findByUserId(Integer userId, PageRequest pageRequest);
+
     Page<Transaction> findByUserIdAndRole(Integer userId, EventRole role, PageRequest pageRequest);
+
     @Query("SELECT t from Transaction t WHERE t.event.id = :eventId AND t.role IN :roles")
     List<Transaction> findListByEventIdAndRoles(Integer eventId, List<EventRole> roles);
 
     Page<Transaction> findByEventIdAndRole(Integer eventId, EventRole eventRole, PageRequest pageRequest);
-
 }
