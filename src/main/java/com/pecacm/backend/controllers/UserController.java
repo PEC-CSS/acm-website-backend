@@ -10,7 +10,7 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
-import com.pecacm.backend.response.UserEventResponse;
+import com.pecacm.backend.response.UserEventDetails;
 import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
@@ -144,7 +144,7 @@ public class UserController {
 
     @GetMapping("/events")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<List<UserEventResponse>> getEventsForUser(@RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
+    public ResponseEntity<List<UserEventDetails>> getEventsForUser(@RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
         if (offset == null) offset = 0;
         if (pageSize == null) pageSize = 20; // returning first 20 users
 

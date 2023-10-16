@@ -13,11 +13,9 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
-import com.pecacm.backend.response.UserEventResponse;
+import com.pecacm.backend.response.UserEventDetails;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -162,13 +160,13 @@ public class UserService implements UserDetailsService {
         return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize));
     }
 
-    public List<UserEventResponse> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
+    public List<UserEventDetails> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserIdAndRole(user.getId(), eventRole, PageRequest.of(offset, pageSize));
 
         return transactionsPage.getContent().stream()
-                .map(transaction -> new UserEventResponse(
+                .map(transaction -> new UserEventDetails(
                         transaction.getEvent().getId(),
                         transaction.getEvent().getTitle(),
                         eventRole,
@@ -178,13 +176,13 @@ public class UserService implements UserDetailsService {
                 .toList();
     }
 
-    public List<UserEventResponse> getEventsForUser(Integer pageSize, Integer offset) {
+    public List<UserEventDetails> getEventsForUser(Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserId(user.getId(), PageRequest.of(offset, pageSize));
 
         return transactionsPage.getContent().stream()
-                .map(transaction -> new UserEventResponse(
+                .map(transaction -> new UserEventDetails(
                         transaction.getEvent().getId(),
                         transaction.getEvent().getTitle(),
                         transaction.getRole(),
