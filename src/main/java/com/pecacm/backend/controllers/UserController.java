@@ -10,7 +10,7 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
-import com.pecacm.backend.response.UserEventResponse;
+import com.pecacm.backend.response.UserEventDetails;
 import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
@@ -28,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -111,7 +112,7 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<Page<User>> getLeaderboard(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+    public ResponseEntity<List<User>> getLeaderboard(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
         if (offset == null) offset = 0;
         if (pageSize == null) pageSize = 20; // returning first 20 users
 
@@ -122,14 +123,14 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard/{batch}")
-    public ResponseEntity<Page<User>> getLeaderboardByBatch(@PathVariable Integer batch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+    public ResponseEntity<List<User>> getLeaderboardByBatch(@PathVariable Integer batch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
         if (offset == null) offset = 0;
         if (pageSize == null) pageSize = 20; // returning first 20 users
 
         if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
         if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
 
-        Page<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
+        List<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
         return ResponseEntity.ok(users);
     }
 
@@ -143,7 +144,7 @@ public class UserController {
 
     @GetMapping("/events")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
-    public ResponseEntity<Page<UserEventResponse>> getEventsForUser(@RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
+    public ResponseEntity<List<UserEventDetails>> getEventsForUser(@RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
         if (offset == null) offset = 0;
         if (pageSize == null) pageSize = 20; // returning first 20 users
 

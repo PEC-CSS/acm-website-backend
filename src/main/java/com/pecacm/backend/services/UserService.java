@@ -4,7 +4,6 @@ import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
-import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.enums.Role;
@@ -13,11 +12,9 @@ import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
-import com.pecacm.backend.response.UserEventResponse;
+import com.pecacm.backend.response.UserEventDetails;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -121,8 +117,8 @@ public class UserService implements UserDetailsService {
         return userRepository.countByXpGreaterThan(score) + 1;
     }
 
-    public Page<User> getLeaderboard(Integer offset, Integer pageSize) {
-        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize));
+    public List<User> getLeaderboard(Integer offset, Integer pageSize) {
+        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize)).getContent();
     }
 
     public User updateUser(User updatedUser, String email) {
@@ -158,17 +154,17 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public Page<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
-        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize));
+    public List<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
+        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize)).getContent();
     }
 
-    public Page<UserEventResponse> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
+    public List<UserEventDetails> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserIdAndRole(user.getId(), eventRole, PageRequest.of(offset, pageSize));
 
-        List<UserEventResponse> eventResponseList = transactionsPage.getContent().stream()
-                .map(transaction -> new UserEventResponse(
+        return transactionsPage.getContent().stream()
+                .map(transaction -> new UserEventDetails(
                         transaction.getEvent().getId(),
                         transaction.getEvent().getTitle(),
                         eventRole,
@@ -176,17 +172,15 @@ public class UserService implements UserDetailsService {
                         transaction.getEvent().getEndDate()
                 ))
                 .toList();
-
-        return new PageImpl<>(eventResponseList, transactionsPage.getPageable(), transactionsPage.getTotalElements());
     }
 
-    public Page<UserEventResponse> getEventsForUser(Integer pageSize, Integer offset) {
+    public List<UserEventDetails> getEventsForUser(Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserId(user.getId(), PageRequest.of(offset, pageSize));
 
-        List<UserEventResponse> eventResponseList = transactionsPage.getContent().stream()
-                .map(transaction -> new UserEventResponse(
+        return transactionsPage.getContent().stream()
+                .map(transaction -> new UserEventDetails(
                         transaction.getEvent().getId(),
                         transaction.getEvent().getTitle(),
                         transaction.getRole(),
@@ -194,7 +188,5 @@ public class UserService implements UserDetailsService {
                         transaction.getEvent().getEndDate()
                 ))
                 .toList();
-
-        return new PageImpl<>(eventResponseList, transactionsPage.getPageable(), transactionsPage.getTotalElements());
     }
 }
