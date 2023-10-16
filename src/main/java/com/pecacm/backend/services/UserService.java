@@ -4,7 +4,6 @@ import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
-import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.enums.Role;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService implements UserDetailsService {
