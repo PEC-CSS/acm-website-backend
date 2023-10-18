@@ -31,9 +31,10 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+    private final TransactionRepository transactionRepository;
+
     private final VerificationTokenRepository verificationTokenRepository;
 
-    private final TransactionRepository transactionRepository;
 
     public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
@@ -193,5 +194,11 @@ public class UserService implements UserDetailsService {
                         transaction.getEvent().getEndDate()
                 ))
                 .toList();
+    }
+
+    public List<Transaction> getUserTransactions(String email, Integer offset, Integer pageSize) {
+        List<Transaction> transactions = new ArrayList<>();
+        transactionRepository.findByUser_EmailOrderByDateDesc(email, PageRequest.of(offset, pageSize)).forEach(transactions::add);
+        return transactions;
     }
 }

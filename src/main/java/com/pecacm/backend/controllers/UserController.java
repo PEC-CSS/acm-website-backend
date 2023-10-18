@@ -1,6 +1,7 @@
 package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
+import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
@@ -142,6 +143,20 @@ public class UserController {
         return (updatedUser == null) ? ResponseEntity.badRequest().build() : ResponseEntity.ok(updatedUser);
     }
 
+    @GetMapping("/transaction")
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<List<Transaction>> getUserTransactions(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 transactions
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = (String) authentication.getPrincipal();
+        return ResponseEntity.ok(userService.getUserTransactions(email, offset, pageSize));
+    }
+
     @GetMapping("/events")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<List<UserEventDetails>> getEventsForUser(@RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
@@ -156,5 +171,6 @@ public class UserController {
         }
 
         return ResponseEntity.ok(userService.getEventsForUser(pageSize, offset));
+
     }
 }
