@@ -5,14 +5,15 @@ import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Transaction;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
+import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.enums.Role;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.repository.VerificationTokenRepository;
+import com.pecacm.backend.response.UserEventDetails;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -33,11 +35,11 @@ public class UserService implements UserDetailsService {
 
     private final VerificationTokenRepository verificationTokenRepository;
 
-    @Autowired
-    public UserService(UserRepository userRepository, TransactionRepository transactionRepository, VerificationTokenRepository verificationTokenRepository) {
+
+    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
-        this.transactionRepository = transactionRepository;
         this.verificationTokenRepository = verificationTokenRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     public void addUser(User user, PasswordEncoder passwordEncoder) {
@@ -67,7 +69,11 @@ public class UserService implements UserDetailsService {
         VerificationToken token = verificationTokenRepository.findById(tokenId).orElseThrow(() ->
                 new AcmException("Verification token not found", HttpStatus.NOT_FOUND)
         );
-        // TODO: check token expiration
+        LocalDateTime currentDate = LocalDateTime.now();
+        boolean tokenExpired = token.getCreatedDate().isBefore(currentDate.minusDays(3));
+        if (tokenExpired){
+            throw new AcmException("Token Expired", HttpStatus.NOT_FOUND);
+        }
         User user = token.getUser();
         user.setVerified(true);
         verificationTokenRepository.deleteById(tokenId);
@@ -117,8 +123,8 @@ public class UserService implements UserDetailsService {
         return userRepository.countByXpGreaterThan(score) + 1;
     }
 
-    public Page<User> getLeaderboard(Integer offset, Integer pageSize) {
-        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize));
+    public List<User> getLeaderboard(Integer offset, Integer pageSize) {
+        return userRepository.findAllByOrderByXpDesc(PageRequest.of(offset, pageSize)).getContent();
     }
 
     public User updateUser(User updatedUser, String email) {
@@ -154,8 +160,40 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public Page<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
-        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize));
+    public List<User> getLeaderboardByBatch(Integer batch, Integer offset, Integer pageSize) {
+        return userRepository.findAllByBatch(batch, PageRequest.of(offset, pageSize)).getContent();
+    }
+
+    public List<UserEventDetails> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = this.loadUserByUsername(email);
+        Page<Transaction> transactionsPage = transactionRepository.findByUserIdAndRole(user.getId(), eventRole, PageRequest.of(offset, pageSize));
+
+        return transactionsPage.getContent().stream()
+                .map(transaction -> new UserEventDetails(
+                        transaction.getEvent().getId(),
+                        transaction.getEvent().getTitle(),
+                        eventRole,
+                        transaction.getXp(),
+                        transaction.getEvent().getEndDate()
+                ))
+                .toList();
+    }
+
+    public List<UserEventDetails> getEventsForUser(Integer pageSize, Integer offset) {
+        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = this.loadUserByUsername(email);
+        Page<Transaction> transactionsPage = transactionRepository.findByUserId(user.getId(), PageRequest.of(offset, pageSize));
+
+        return transactionsPage.getContent().stream()
+                .map(transaction -> new UserEventDetails(
+                        transaction.getEvent().getId(),
+                        transaction.getEvent().getTitle(),
+                        transaction.getRole(),
+                        transaction.getXp(),
+                        transaction.getEvent().getEndDate()
+                ))
+                .toList();
     }
 
     public List<Transaction> getUserTransactions(String email, Integer offset, Integer pageSize) {

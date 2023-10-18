@@ -2,13 +2,16 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Transaction;
+import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
+import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
+import com.pecacm.backend.response.UserEventDetails;
 import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
@@ -110,7 +113,7 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard")
-    public ResponseEntity<Page<User>> getLeaderboard(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+    public ResponseEntity<List<User>> getLeaderboard(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
         if (offset == null) offset = 0;
         if (pageSize == null) pageSize = 20; // returning first 20 users
 
@@ -121,14 +124,14 @@ public class UserController {
     }
 
     @GetMapping("/leaderboard/{batch}")
-    public ResponseEntity<Page<User>> getLeaderboardByBatch(@PathVariable Integer batch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+    public ResponseEntity<List<User>> getLeaderboardByBatch(@PathVariable Integer batch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
         if (offset == null) offset = 0;
         if (pageSize == null) pageSize = 20; // returning first 20 users
 
         if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
         if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
 
-        Page<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
+        List<User> users = userService.getLeaderboardByBatch(batch, offset, pageSize);
         return ResponseEntity.ok(users);
     }
 
@@ -143,8 +146,31 @@ public class UserController {
     @GetMapping("/transaction")
     @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
     public ResponseEntity<List<Transaction>> getUserTransactions(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 transactions
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = (String) authentication.getPrincipal();
         return ResponseEntity.ok(userService.getUserTransactions(email, offset, pageSize));
+    }
+
+    @GetMapping("/events")
+    @PreAuthorize(Constants.HAS_ROLE_MEMBER_AND_ABOVE)
+    public ResponseEntity<List<UserEventDetails>> getEventsForUser(@RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        if (eventRole != null) {
+            return ResponseEntity.ok(userService.getEventsForUserWithRole(eventRole, pageSize, offset));
+        }
+
+        return ResponseEntity.ok(userService.getEventsForUser(pageSize, offset));
+
     }
 }
