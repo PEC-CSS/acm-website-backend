@@ -36,7 +36,12 @@ public class EventsController {
 
     @GetMapping
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<List<Event>> getAllEvents(@RequestParam @Nullable LocalDate eventsFrom, @RequestParam @Nullable LocalDate eventsTill) {
+    public ResponseEntity<List<Event>> getAllEvents(@RequestParam @Nullable LocalDate eventsFrom, @RequestParam @Nullable LocalDate eventsTill, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
 
         if (eventsFrom==null){
             eventsFrom = LocalDate.now().minusYears(99);
@@ -48,32 +53,40 @@ public class EventsController {
         if (eventsFrom.isAfter(eventsTill)) {
             throw new AcmException("eventsFrom Date must be <= eventsTill Date", HttpStatus.BAD_REQUEST);
         }
-        // TODO : Return pageable response
 
-        List<Event> events = eventService.getEventsBetweenTwoTimestamps(eventsFrom, eventsTill);
+        List<Event> events = eventService.getEventsBetweenTwoTimestamps(eventsFrom, eventsTill,offset, pageSize);
 
         return ResponseEntity.ok(events);
     }
 
     @GetMapping("/ongoing")
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<List<Event>> getOngoingEvents() {
-        return ResponseEntity.ok(eventService.getOngoingEvents());
+    public ResponseEntity<List<Event>> getOngoingEvents(@RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+        return ResponseEntity.ok(eventService.getOngoingEvents(offset, pageSize));
     }
 
     @GetMapping("/{eventId}")
     @PreAuthorize(Constants.HAS_ANY_ROLE)
     public ResponseEntity<Event> getSingleEvent(@PathVariable Integer eventId){
-        // TODO : Return pageable response
         Event event = eventService.getSingleEvent(eventId);
         return ResponseEntity.ok(event);
     }
 
     @GetMapping("/branches/{branch}")
     @PreAuthorize(Constants.HAS_ANY_ROLE)
-    public ResponseEntity<List<Event>> getEventsByBranch(@PathVariable Branch branch){
-        // TODO : Return pageable response
-        List<Event> events = eventService.getEventsByBranch(branch);
+    public ResponseEntity<List<Event>> getEventsByBranch(@PathVariable Branch branch, @RequestParam @Nullable Integer offset, @RequestParam @Nullable Integer pageSize){
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        List<Event> events = eventService.getEventsByBranch(branch,offset, pageSize);
         return ResponseEntity.ok(events);
     }
 

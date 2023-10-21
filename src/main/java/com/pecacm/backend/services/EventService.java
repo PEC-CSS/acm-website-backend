@@ -39,16 +39,17 @@ public class EventService {
 
     // TODO : change all GET events to pageable repositories
 
-    public List<Event> getEventsBetweenTwoTimestamps(LocalDate eventsFrom, LocalDate eventsTill) {
+    public List<Event> getEventsBetweenTwoTimestamps(LocalDate eventsFrom, LocalDate eventsTill, Integer offset, Integer pageSize) {
         return eventRepository
                 .findAllByStartDateGreaterThanEqualAndEndDateLessThanEqual(
                         eventsFrom.atStartOfDay(),
-                        eventsTill.plusDays(1).atStartOfDay()
+                        eventsTill.plusDays(1).atStartOfDay(),
+                        PageRequest.of(offset, pageSize)
                 );
     }
 
-    public List<Event> getOngoingEvents() {
-        return eventRepository.findAllByEndedFalse();
+    public List<Event> getOngoingEvents(Integer offset, Integer pageSize) {
+        return eventRepository.findAllByEndedFalse(PageRequest.of(offset, pageSize));
     }
 
     public Event getSingleEvent(Integer eventId) {
@@ -59,8 +60,8 @@ public class EventService {
         return event.get();
     }
 
-    public List<Event> getEventsByBranch(Branch branch) {
-        return eventRepository.findByBranch(branch);
+    public List<Event> getEventsByBranch(Branch branch, Integer offset, Integer pageSize) {
+        return eventRepository.findByBranch(branch,PageRequest.of(offset,pageSize));
     }
 
     public EventAttendeesResponse getEventUsersByRole(Integer eventId, EventRole eventRole, PageRequest pageRequest) {
