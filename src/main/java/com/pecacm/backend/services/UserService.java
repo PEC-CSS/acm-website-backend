@@ -201,4 +201,9 @@ public class UserService implements UserDetailsService {
         transactionRepository.findByUser_EmailOrderByDateDesc(email, PageRequest.of(offset, pageSize)).forEach(transactions::add);
         return transactions;
     }
+    @Transactional
+    public void changePassword(User user, String newPassword) {
+        user.setPassword(newPassword);
+        userRepository.save(user);
+    }
 }

@@ -1,21 +1,19 @@
 package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
-import com.pecacm.backend.entities.Transaction;
-import com.pecacm.backend.entities.Event;
-import com.pecacm.backend.entities.User;
-import com.pecacm.backend.entities.VerificationToken;
+import com.pecacm.backend.entities.*;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.AssignRoleRequest;
 import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
+import com.pecacm.backend.response.ForgetPasswordResponse;
 import com.pecacm.backend.response.RegisterResponse;
 import com.pecacm.backend.response.UserEventDetails;
+import com.pecacm.backend.services.ForgetPasswordService;
 import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -29,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -42,14 +41,17 @@ public class UserController {
 
     private final JwtService jwtService;
 
+    private final ForgetPasswordService forgetPasswordService;
+
     private final AuthenticationManager authenticationManager;
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(VerificationService verificationService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public UserController(VerificationService verificationService, UserService userService, JwtService jwtService, ForgetPasswordService forgetPasswordService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.verificationService = verificationService;
         this.userService = userService;
         this.jwtService = jwtService;
+        this.forgetPasswordService = forgetPasswordService;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
     }
@@ -141,6 +143,28 @@ public class UserController {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User updatedUser = userService.updateUser(user, email);
         return (updatedUser == null) ? ResponseEntity.badRequest().build() : ResponseEntity.ok(updatedUser);
+    }
+
+    @GetMapping("/forget-password")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
+    public ResponseEntity<ForgetPasswordResponse> getForgetPasswordToken(String email){
+        User user = userService.getUserByEmail(email);
+        ForgetPasswordToken forgetPasswordToken = forgetPasswordService.getForgetPasswordToken(user);
+        return ResponseEntity.status(HttpStatus.OK).body(new ForgetPasswordResponse(forgetPasswordToken.getToken().toString()));
+    }
+
+    @PostMapping("/forget-password")
+    @PreAuthorize(Constants.HAS_ANY_ROLE)
+    public ResponseEntity<AuthenticationResponse> changePassword(@RequestParam UUID token, @RequestBody String newPassword){
+        ForgetPasswordToken forgetPasswordToken = forgetPasswordService.findByToken(token);
+        if (forgetPasswordToken==null || forgetPasswordToken.getCreatedDate().isBefore(LocalDateTime.now().minusMinutes(10))){
+            throw new AcmException("Invalid or expired token.", HttpStatus.BAD_REQUEST);
+        }
+        User user = forgetPasswordToken.getUser();
+        userService.changePassword(user,newPassword);
+        forgetPasswordService.deleteToken(forgetPasswordToken);
+        String jwtToken = jwtService.generateToken(user);
+        return ResponseEntity.ok(new AuthenticationResponse(jwtToken, user));
     }
 
     @GetMapping("/transaction")
