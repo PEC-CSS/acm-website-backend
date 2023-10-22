@@ -33,7 +33,11 @@ public class UserService implements UserDetailsService {
 
     private final TransactionRepository transactionRepository;
 
-    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository) {
+    private final VerificationTokenRepository verificationTokenRepository;
+
+    private final VerificationService verificationService;
+
+    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository, VerificationService verificationService) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.transactionRepository = transactionRepository;
