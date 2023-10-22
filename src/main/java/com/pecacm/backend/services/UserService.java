@@ -49,6 +49,7 @@ public class UserService implements UserDetailsService {
         }
         if (Strings.isBlank(user.getEmail()) || Strings.isBlank(user.getPassword()) || user.getSid() == null ||
                 Strings.isBlank(user.getBranch())
+            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks 
         ) {
             throw new AcmException("One or more required fields are empty", HttpStatus.BAD_REQUEST);
         }
@@ -69,9 +70,7 @@ public class UserService implements UserDetailsService {
         }
         if (password.isBlank() || password.isEmpty()) {
             throw new AcmException("password cannot be blank or empty", HttpStatus.BAD_REQUEST);
-        }
-        if (!userRepository.checkVerifiedByEmail(username).orElse(false)) {
-            throw new AcmException("Your email is not verified and hence we cannot change your password, please contact our admins", HttpStatus.BAD_REQUEST);
+            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks 
         }
 
         userRepository.updatePasswordByEmail(passwordEncoder.encode(password), username);
