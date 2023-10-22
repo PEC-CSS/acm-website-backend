@@ -35,7 +35,7 @@ public class EmailService {
         mailMessage.setTo(username);
         mailMessage.setSubject("Reset your password");
         mailMessage.setText(
-                token.getToken().toString()
+                "to change your password please click here " + "dummyFrontEndRoute?token=" + token.getToken().toString()
         );
 
         javaMailSender.send(mailMessage);
