@@ -33,12 +33,7 @@ public class UserService implements UserDetailsService {
 
     private final TransactionRepository transactionRepository;
 
-    private final VerificationTokenRepository verificationTokenRepository;
-
-
-    private final VerificationService verificationService;
-
-    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository, VerificationService verificationService) {
+    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.transactionRepository = transactionRepository;
@@ -51,7 +46,7 @@ public class UserService implements UserDetailsService {
         }
         if (Strings.isBlank(user.getEmail()) || Strings.isBlank(user.getPassword()) || user.getSid() == null ||
                 Strings.isBlank(user.getBranch())
-            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks 
+            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks
         ) {
             throw new AcmException("One or more required fields are empty", HttpStatus.BAD_REQUEST);
         }
@@ -72,7 +67,7 @@ public class UserService implements UserDetailsService {
         }
         if (password.isBlank() || password.isEmpty()) {
             throw new AcmException("password cannot be blank or empty", HttpStatus.BAD_REQUEST);
-            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks 
+            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks
         }
 
         userRepository.updatePasswordByEmail(passwordEncoder.encode(password), username);
