@@ -34,10 +34,13 @@ public class UserService implements UserDetailsService {
 
     private final TransactionRepository transactionRepository;
 
-    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository) {
+    private final VerificationService verificationService;
+
+    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository, VerificationService verificationService) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.transactionRepository = transactionRepository;
+        this.verificationService = verificationService;
     }
 
     public void addUser(User user, PasswordEncoder passwordEncoder) {
@@ -54,6 +57,25 @@ public class UserService implements UserDetailsService {
         user.setBatch(batch);
         user.setVerified(false);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(UUID tokenId, String username, String password, PasswordEncoder passwordEncoder) {
+        if (!userRepository.existsByEmail(username)) {
+            throw new AcmException("Email provided does not match any of the registered users", HttpStatus.NOT_FOUND);
+        }
+        if (!verificationTokenRepository.checkVerificationToken(tokenId)) {
+            throw new AcmException("UUID token provided does not match, it might be expired", HttpStatus.NOT_FOUND);
+        }
+        if (password.isBlank() || password.isEmpty()) {
+            throw new AcmException("password cannot be blank or empty", HttpStatus.BAD_REQUEST);
+        }
+        if (!userRepository.checkVerifiedByEmail(username).orElse(false)) {
+            throw new AcmException("Your email is not verified and hence we cannot change your password, please contact our admins", HttpStatus.BAD_REQUEST);
+        }
+
+        userRepository.updatePasswordByEmail(passwordEncoder.encode(password), username);
+        verificationService.getVerificationToken(getUserByEmail(username));
     }
 
     @Override

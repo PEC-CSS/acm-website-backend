@@ -17,6 +17,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Integer> {
     Boolean existsByEmailOrSid(String email, Integer sid);
 
+    Boolean existsByEmail(String email);
+
     Optional<User> findByEmail(String email);
 
     @Query("SELECT u FROM User u WHERE u.email in :emails")
@@ -28,11 +30,21 @@ public interface UserRepository extends JpaRepository<User, Integer> {
            "WHERE u.email = :email")
     Optional<Role> findRoleByEmail(String email);
 
+    @Query("SELECT u.verified FROM User u " +
+            "WHERE u.email = :email")
+    Optional<Boolean> checkVerifiedByEmail(String email);
+
     @Modifying
     @Query("UPDATE User " +
            "SET designation = :newRole " +
            "WHERE email = :email")
     void updateRoleByEmail(String email, Role newRole);
+
+    @Modifying
+    @Query("UPDATE User " +
+            "SET password = :password " +
+            "WHERE email = :email")
+    void updatePasswordByEmail(String password, String email);
 
     Long countByXpGreaterThan(Integer xp);
 

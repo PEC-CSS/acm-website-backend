@@ -11,6 +11,7 @@ import com.pecacm.backend.model.AuthenticationRequest;
 import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
 import com.pecacm.backend.response.UserEventDetails;
+import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
@@ -39,15 +40,18 @@ public class UserController {
 
     private final UserService userService;
 
+    private final EmailService emailService;
+
     private final JwtService jwtService;
 
     private final AuthenticationManager authenticationManager;
 
     private final PasswordEncoder passwordEncoder;
 
-    public UserController(VerificationService verificationService, UserService userService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
+    public UserController(VerificationService verificationService, UserService userService, EmailService emailService, JwtService jwtService, AuthenticationManager authenticationManager, PasswordEncoder passwordEncoder) {
         this.verificationService = verificationService;
         this.userService = userService;
+        this.emailService = emailService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.passwordEncoder = passwordEncoder;
@@ -67,6 +71,20 @@ public class UserController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = (String) authentication.getPrincipal();
         return ResponseEntity.ok(userService.getUserByEmail(email));
+    }
+
+    @GetMapping("/forgot-password")
+    public ResponseEntity<String> forgotPasswordSendEmail(@RequestParam String username) {
+        emailService.sendVerificationEmail(username);
+        return ResponseEntity.ok("Email sent");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthenticationResponse> resetPassword(@RequestParam UUID tokenId, @RequestParam String username, @RequestParam String password) {
+        userService.changePassword(tokenId, username, password, passwordEncoder);
+        User user = userService.getUserByEmail(username);
+        String jwtToken = jwtService.generateToken(user);
+        return ResponseEntity.ok(new AuthenticationResponse(jwtToken, user));
     }
 
     @PostMapping("/login")
