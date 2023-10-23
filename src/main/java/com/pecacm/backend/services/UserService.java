@@ -35,13 +35,10 @@ public class UserService implements UserDetailsService {
 
     private final VerificationTokenRepository verificationTokenRepository;
 
-    private final VerificationService verificationService;
-
     public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository, VerificationService verificationService) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.transactionRepository = transactionRepository;
-        this.verificationService = verificationService;
     }
 
     public void addUser(User user, PasswordEncoder passwordEncoder) {
@@ -75,7 +72,7 @@ public class UserService implements UserDetailsService {
         }
 
         userRepository.updatePasswordByEmail(passwordEncoder.encode(password), username);
-        verificationService.getVerificationToken(getUserByEmail(username));
+        verificationTokenRepository.deleteByToken(tokenId);
     }
 
     @Override
