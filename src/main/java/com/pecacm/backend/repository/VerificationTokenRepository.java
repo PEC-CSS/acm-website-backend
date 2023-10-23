@@ -2,6 +2,7 @@ package com.pecacm.backend.repository;
 
 import com.pecacm.backend.entities.VerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -21,4 +22,7 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
             "ELSE FALSE " +
             "END as result")
     Boolean checkVerificationToken(UUID tokenId);
+
+    @Modifying
+    void deleteByToken(UUID tokenId);
 }

@@ -13,23 +13,22 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender javaMailSender;
-    private final VerificationTokenRepository verificationTokenRepository;
-
+    private final VerificationService verificationService;
     private final UserRepository userRepository;
-    public EmailService(JavaMailSender javaMailSender, VerificationTokenRepository verificationTokenRepository, UserRepository userRepository) {
+    private final UserService userService;
+    public EmailService(JavaMailSender javaMailSender, VerificationService verificationService, UserRepository userRepository, UserService userService) {
         this.javaMailSender = javaMailSender;
-        this.verificationTokenRepository = verificationTokenRepository;
+        this.verificationService = verificationService;
         this.userRepository = userRepository;
+        this.userService = userService;
     }
 
     public void sendVerificationEmail(String username) {
-        VerificationToken token = verificationTokenRepository.findByUsername(username).orElse(null);
-        if (token == null) {
-            throw new AcmException("User with provided email does not exist", HttpStatus.NOT_FOUND);
-        }
         if (!userRepository.checkVerifiedByEmail(username).orElse(false)) {
             throw new AcmException("Your email is not verified and hence we cannot change your password, please contact our admins", HttpStatus.BAD_REQUEST);
         }
+
+        VerificationToken token = verificationService.getVerificationToken(userService.getUserByEmail(username));
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(username);
