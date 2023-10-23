@@ -35,11 +35,13 @@ public class UserService implements UserDetailsService {
 
     private final VerificationTokenRepository verificationTokenRepository;
 
+    private final VerificationService verificationService;
 
-    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository) {
+    public UserService(UserRepository userRepository, VerificationTokenRepository verificationTokenRepository, TransactionRepository transactionRepository, VerificationService verificationService) {
         this.userRepository = userRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.transactionRepository = transactionRepository;
+        this.verificationService = verificationService;
     }
 
     public void addUser(User user, PasswordEncoder passwordEncoder) {
@@ -48,6 +50,7 @@ public class UserService implements UserDetailsService {
         }
         if (Strings.isBlank(user.getEmail()) || Strings.isBlank(user.getPassword()) || user.getSid() == null ||
                 Strings.isBlank(user.getBranch())
+            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks
         ) {
             throw new AcmException("One or more required fields are empty", HttpStatus.BAD_REQUEST);
         }
@@ -56,6 +59,23 @@ public class UserService implements UserDetailsService {
         user.setBatch(batch);
         user.setVerified(false);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void changePassword(UUID tokenId, String username, String password, PasswordEncoder passwordEncoder) {
+        if (!userRepository.existsByEmail(username)) {
+            throw new AcmException("Email provided does not match any of the registered users", HttpStatus.NOT_FOUND);
+        }
+        if (!verificationTokenRepository.checkVerificationToken(tokenId)) {
+            throw new AcmException("UUID token provided does not match, it might be expired", HttpStatus.NOT_FOUND);
+        }
+        if (password.isBlank() || password.isEmpty()) {
+            throw new AcmException("password cannot be blank or empty", HttpStatus.BAD_REQUEST);
+            // TODO: 22/10/23 add required password checks to stay consistent with frontend checks
+        }
+
+        userRepository.updatePasswordByEmail(passwordEncoder.encode(password), username);
+        verificationService.getVerificationToken(getUserByEmail(username));
     }
 
     @Override
