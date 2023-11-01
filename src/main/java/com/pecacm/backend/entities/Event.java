@@ -35,8 +35,8 @@ public class Event {
     @Column(name="description", nullable = false)
     private String description;
 
-    @Column(name = "attendance_sheet")
-    private String attendance;
+    @Column(name = "related_link")
+    private String relatedLink = "";
 
     @Column(name = "venue")
     private String venue;
