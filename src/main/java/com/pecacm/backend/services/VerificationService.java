@@ -19,6 +19,7 @@ public class VerificationService {
 
     @Transactional
     public VerificationToken getVerificationToken(User user) {
+        verificationTokenRepository.deleteAllByUser(user);
         return verificationTokenRepository.save(
                 VerificationToken.builder().user(user).build()
         );
