@@ -60,10 +60,11 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void changePassword(UUID tokenId, String username, String password, PasswordEncoder passwordEncoder) {
-        if (!userRepository.existsByEmail(username)) {
+        Optional<User> user = userRepository.findByEmail(username);
+        if (user.isEmpty()) {
             throw new AcmException("Email provided does not match any of the registered users", HttpStatus.NOT_FOUND);
         }
-        if (!verificationTokenRepository.checkVerificationToken(tokenId)) {
+        if (!verificationTokenRepository.checkVerificationToken(tokenId,user.get())) {
             throw new AcmException("UUID token provided does not match, it might be expired", HttpStatus.NOT_FOUND);
         }
         if (password.isBlank() || password.isEmpty()) {

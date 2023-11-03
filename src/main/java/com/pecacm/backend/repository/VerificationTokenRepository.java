@@ -1,5 +1,6 @@
 package com.pecacm.backend.repository;
 
+import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,11 +18,11 @@ public interface VerificationTokenRepository extends JpaRepository<VerificationT
 
     @Query("SELECT "+
             "CASE " +
-            "WHEN :tokenId = (SELECT v.token from VerificationToken v ORDER BY v.createdDate DESC LIMIT 1)" +
+            "WHEN :tokenId = (SELECT v.token from VerificationToken v WHERE v.user=:user ORDER BY v.createdDate DESC LIMIT 1)" +
             "THEN TRUE " +
             "ELSE FALSE " +
             "END as result")
-    Boolean checkVerificationToken(UUID tokenId);
+    Boolean checkVerificationToken(UUID tokenId, User user);
 
     @Modifying
     void deleteByToken(UUID tokenId);
