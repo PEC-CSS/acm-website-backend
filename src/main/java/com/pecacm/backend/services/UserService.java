@@ -60,11 +60,17 @@ public class UserService implements UserDetailsService {
 
     @Transactional
     public void changePassword(UUID tokenId, String username, String password, PasswordEncoder passwordEncoder) {
-        if (!userRepository.existsByEmail(username)) {
+        Optional<User> user = userRepository.findByEmail(username);
+        if (user.isEmpty()) {
             throw new AcmException("Email provided does not match any of the registered users", HttpStatus.NOT_FOUND);
         }
-        if (!verificationTokenRepository.checkVerificationToken(tokenId)) {
+        Optional<VerificationToken> token = verificationTokenRepository.findById(tokenId);
+        if (token.isEmpty() || token.get().getCreatedDate().isBefore(LocalDateTime.now().minusMinutes(15))){
+            verificationTokenRepository.deleteById(tokenId);
             throw new AcmException("UUID token provided does not match, it might be expired", HttpStatus.NOT_FOUND);
+        }
+        if (token.get().getUser() != user.get()){
+            throw new AcmException("UUID token provided does not belong to the user.", HttpStatus.UNAUTHORIZED);
         }
         if (password.isBlank() || password.isEmpty()) {
             throw new AcmException("password cannot be blank or empty", HttpStatus.BAD_REQUEST);
