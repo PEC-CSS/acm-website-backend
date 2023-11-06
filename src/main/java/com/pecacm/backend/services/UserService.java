@@ -224,4 +224,8 @@ public class UserService implements UserDetailsService {
         transactionRepository.findByUser_EmailOrderByDateDesc(email, PageRequest.of(offset, pageSize)).forEach(transactions::add);
         return transactions;
     }
+
+    public List<User> getFilteredUserList(String query){
+        return userRepository.findAllBySearchQuery(query);
+    }
 }

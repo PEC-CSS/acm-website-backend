@@ -49,4 +49,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Long countByXpGreaterThan(Integer xp);
 
     Page<User> findAllByOrderByXpDesc(PageRequest pageRequest);
+    @Query("SELECT u FROM User u WHERE u.email LIKE %:query% ORDER BY u.id LIMIT 10")
+    List<User> findAllBySearchQuery(String query);
 }

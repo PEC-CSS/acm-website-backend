@@ -191,4 +191,9 @@ public class UserController {
         return ResponseEntity.ok(userService.getEventsForUser(pageSize, offset));
 
     }
+
+    @GetMapping("/search")
+    public List<User> getFilteredUsers(@RequestParam String query){
+        return userService.getFilteredUserList(query);
+    }
 }
