@@ -47,7 +47,7 @@ public class EventsController {
             eventsFrom = LocalDate.now().minusYears(99);
         }
         if (eventsTill==null){
-            eventsTill = LocalDate.now();
+            eventsTill = LocalDate.now().plusYears(99);
         }
 
         if (eventsFrom.isAfter(eventsTill)) {
