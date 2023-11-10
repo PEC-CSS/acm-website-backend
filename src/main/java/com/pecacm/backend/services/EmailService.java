@@ -1,13 +1,23 @@
 package com.pecacm.backend.services;
 
+import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.repository.UserRepository;
-import com.pecacm.backend.repository.VerificationTokenRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.commonmark.node.Node;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.logging.Logger;
+
+import org.commonmark.parser.Parser;
 
 @Service
 public class EmailService {
@@ -38,5 +48,27 @@ public class EmailService {
         );
 
         javaMailSender.send(mailMessage);
+    }
+
+    public void sendEmail(List<User> users, String subject, String body) {
+        String[] recipients = users.stream().map(User::getEmail).toArray(String[]::new);
+        String htmlBody = convertMarkdownToHtml(body);
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            message.setSubject(subject);
+            MimeMessageHelper helper;
+            helper = new MimeMessageHelper(message, true);
+            helper.setTo(recipients);
+            helper.setText(htmlBody, true);
+            javaMailSender.send(message);
+        } catch (MessagingException ex) {
+            throw new AcmException("Not able to send mail");
+        }
+    }
+    private String convertMarkdownToHtml(String markdownContent) {
+        Parser parser = Parser.builder().build();
+        Node document = parser.parse(markdownContent);
+        HtmlRenderer renderer = HtmlRenderer.builder().build();
+        return renderer.render(document);
     }
 }
