@@ -2,10 +2,10 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.User;
-import com.pecacm.backend.enums.Role;
 import com.pecacm.backend.model.EmailRequest;
 import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,25 +25,20 @@ public class EmailController {
         this.userService = userService;
     }
 
-    @PostMapping("/by-role")
+    @PostMapping
     @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
-    public void sendEmailByRole(@RequestBody EmailRequest emailRequest) {
-        List<User> users = userService.getUserByRole(emailRequest.getRole());
-        emailService.sendEmail(users,emailRequest.getSubject(),emailRequest.getBody());
-    }
+    public ResponseEntity<String> sendBulkEmail(@RequestBody EmailRequest emailRequest) {
+        List<User> users;
 
-    @PostMapping("/by-user-ids")
-    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
-    public void sendEmailByUserIds(@RequestBody EmailRequest emailRequest) {
-        List<User> users = userService.getUserByEmailIds(emailRequest.getEmails());
-        System.out.println(users);
-        emailService.sendEmail(users,emailRequest.getSubject(),emailRequest.getBody());
-    }
+        if (emailRequest.getEmails() != null) {
+            users = userService.getUserByEmailIds(emailRequest.getEmails());
+        } else if (emailRequest.getRole() != null) {
+            users = userService.getUserByRole(emailRequest.getRole());
+        } else {
+            users = userService.getAllUsers();
+        }
 
-    @PostMapping("/everyone")
-    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
-    public void sendEmailToEveryone(@RequestBody EmailRequest emailRequest) {
-        List<User> users = userService.getAllUsers();
-        emailService.sendEmail(users,emailRequest.getSubject(),emailRequest.getBody());
+        emailService.sendEmail(users, emailRequest.getSubject(), emailRequest.getBody());
+        return ResponseEntity.ok("Mails sent.");
     }
 }
