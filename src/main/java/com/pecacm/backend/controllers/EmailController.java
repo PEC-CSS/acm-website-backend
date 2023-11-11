@@ -1,10 +1,12 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.enums.Role;
-import com.pecacm.backend.request.EmailRequest;
+import com.pecacm.backend.model.EmailRequest;
 import com.pecacm.backend.services.EmailService;
 import com.pecacm.backend.services.UserService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,12 +26,14 @@ public class EmailController {
     }
 
     @PostMapping("/by-role")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public void sendEmailByRole(@RequestBody EmailRequest emailRequest) {
-        List<User> users = userService.getUserByRole(Role.valueOf(emailRequest.getRole()));
+        List<User> users = userService.getUserByRole(emailRequest.getRole());
         emailService.sendEmail(users,emailRequest.getSubject(),emailRequest.getBody());
     }
 
     @PostMapping("/by-user-ids")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public void sendEmailByUserIds(@RequestBody EmailRequest emailRequest) {
         List<User> users = userService.getUserByEmailIds(emailRequest.getEmails());
         System.out.println(users);
@@ -37,6 +41,7 @@ public class EmailController {
     }
 
     @PostMapping("/everyone")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public void sendEmailToEveryone(@RequestBody EmailRequest emailRequest) {
         List<User> users = userService.getAllUsers();
         emailService.sendEmail(users,emailRequest.getSubject(),emailRequest.getBody());
