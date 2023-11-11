@@ -228,4 +228,16 @@ public class UserService implements UserDetailsService {
     public List<User> getFilteredUserList(String query){
         return userRepository.findAllBySearchQuery(query);
     }
+
+    public List<User> getUserByRole(Role role) {
+        return userRepository.findAllByDesignation(role);
+    }
+
+    public List<User> getUserByEmailIds(List<String> emails) {
+        return userRepository.findByEmailIn(emails);
+    }
+
+    public List<User> getAllUsers(){
+        return userRepository.findAll();
+    }
 }

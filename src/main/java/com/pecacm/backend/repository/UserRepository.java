@@ -51,4 +51,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Page<User> findAllByOrderByXpDesc(PageRequest pageRequest);
     @Query("SELECT u FROM User u WHERE SPLIT_PART(u.email, '.', 1) ILIKE %:query% ORDER BY u.id LIMIT 10")
     List<User> findAllBySearchQuery(String query);
+
+    List<User> findAllByDesignation(Role role);
+
+    List<User> findByEmailIn(List<String> emails);
+
 }
