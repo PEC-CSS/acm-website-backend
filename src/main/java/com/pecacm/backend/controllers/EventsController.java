@@ -44,7 +44,7 @@ public class EventsController {
         if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
 
         if (eventsFrom==null){
-            eventsFrom = LocalDate.now();
+            eventsFrom = LocalDate.now().minusYears(99);
         }
         if (eventsTill==null){
             eventsTill = LocalDate.now().plusYears(99);
