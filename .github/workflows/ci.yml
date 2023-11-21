@@ -1,10 +1,14 @@
 name: Build and Push Docker Image to Docker Hub
 
+#on:
+#  push:
+#    branches:
+#      - 'main'
+
 on:
   push:
-    branches:
-      - 'main'
-
+    tags:
+      - 'v*'
 
 jobs:
 
@@ -43,5 +47,5 @@ jobs:
           password: ${{ env.DOCKER_PASSWORD }}
       - name: Push Image
         env:
-          IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/acm-website:latest
+          IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/acm-website:${{ github.ref_name }}
         run: docker push ${{ env.IMAGE_NAME }}
