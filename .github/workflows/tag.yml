@@ -1,0 +1,13 @@
+name: Testing tag usage
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  github-example-tags:
+    steps:
+      - name: GitHub Tag Name example
+        run: |
+          echo "Tag name from github.ref_name: ${{ github.ref_name }}"
