@@ -193,7 +193,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public List<User> getFilteredUsers(@RequestParam String query){
-        return userService.getFilteredUserList(query);
+    public List<User> getFilteredUsers(@RequestParam String query, @RequestParam(required = false,defaultValue = "false") Boolean onlyVerified){
+        return userService.getFilteredUserList(query,onlyVerified);
     }
 }

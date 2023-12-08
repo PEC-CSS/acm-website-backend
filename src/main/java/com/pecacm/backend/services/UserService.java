@@ -225,8 +225,8 @@ public class UserService implements UserDetailsService {
         return transactions;
     }
 
-    public List<User> getFilteredUserList(String query){
-        return userRepository.findAllBySearchQuery(query);
+    public List<User> getFilteredUserList(String query,boolean onlyVerified){
+        return userRepository.findAllBySearchQuery(query,onlyVerified);
     }
 
     public List<User> getUserByRole(Role role) {
