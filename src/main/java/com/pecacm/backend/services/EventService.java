@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 public class EventService {
@@ -118,41 +119,19 @@ public class EventService {
             throw new AcmException("Event has already ended", HttpStatus.BAD_REQUEST);
         }
 
-        Map<String, User> userMap = new HashMap<>();
-        Set<String> emails = new HashSet<>();
+        updateEventRoles(endEventDetails.getContributors(), EventRole.ORGANIZER, event, endEventDetails);
+        updateEventRoles(endEventDetails.getPublicity(), EventRole.PUBLICITY, event, endEventDetails);
+        updateEventRoles(endEventDetails.getParticipants(), EventRole.PARTICIPANT, event, endEventDetails);
 
-        emails.addAll(endEventDetails.getContributors());
-        emails.addAll(endEventDetails.getPublicity());
-        emails.addAll(endEventDetails.getParticipants());
+        event.setEnded(true);
+        eventRepository.save(event);
+    }
 
-        List<User> users = userRepository.findAllByEmail(emails);
-        users.forEach(user -> {
-            userMap.put(user.getEmail(), user);
-        });
+    private void updateEventRoles(List<String> emails, EventRole eventRole, Event event, EndEventDetails endEventDetails) {
+        List<User> users = userRepository.findByEmailIn(emails);
 
-        List<Pair<User, EventRole>> eventUsers = new ArrayList<>();
-
-        endEventDetails.getContributors().forEach(email -> {
-            Optional.ofNullable(userMap.get(email)).ifPresent(user -> {
-                eventUsers.add(Pair.of(user, EventRole.ORGANIZER));
-            });
-        });
-        endEventDetails.getPublicity().forEach(email -> {
-            Optional.ofNullable(userMap.get(email)).ifPresent(user -> {
-                eventUsers.add(Pair.of(user, EventRole.PUBLICITY));
-            });
-        });
-        endEventDetails.getParticipants().forEach(email -> {
-            Optional.ofNullable(userMap.get(email)).ifPresent(user -> {
-                eventUsers.add(Pair.of(user, EventRole.PARTICIPANT));
-            });
-        });
-
-        List<Transaction> transactions = eventUsers.stream().map((userEventRolePair) -> {
-            User user = userEventRolePair.getFirst();
-            EventRole eventRole = userEventRolePair.getSecond();
+        List<Transaction> transactions = users.stream().map(user -> {
             Integer xp = endEventDetails.getXp(eventRole);
-
             user.setXp(user.getXp() + xp);
 
             return Transaction.builder()
@@ -166,11 +145,8 @@ public class EventService {
 
         transactionRepository.saveAll(transactions);
         userRepository.saveAll(users);
-
-        event.setEnded(true);
-        eventRepository.save(event);
-
     }
+
 
     public Event getNextEvent(LocalDateTime currDateTime) {
         return eventRepository.getNearestEvent(currDateTime);
