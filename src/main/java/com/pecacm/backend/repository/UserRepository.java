@@ -52,10 +52,9 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Page<User> findAllByOrderByXpDesc(PageRequest pageRequest);
     @Query("SELECT u FROM User u " +
             "WHERE SPLIT_PART(u.email, '.', 1) ILIKE %:query% " +
-            "AND (:verifiedOnly IS NULL OR u.verified = :verifiedOnly) " +
+            "AND (:verifiedOnly = false OR u.verified = true) " +
             "ORDER BY u.id LIMIT 10")
     List<User> findAllBySearchQuery(@Param("query") String query, @Param("verifiedOnly") Boolean verifiedOnly);
-
 
     List<User> findAllByDesignation(Role role);
 
