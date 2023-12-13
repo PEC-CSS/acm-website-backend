@@ -1,5 +1,6 @@
 package com.pecacm.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pecacm.backend.enums.EventRole;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,6 +22,7 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @ManyToOne
