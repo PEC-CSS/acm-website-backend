@@ -29,5 +29,5 @@ jobs:
 
       - name: Build the Docker image
         env:
-          IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/acm-website:latest
+          IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/acm-website:pr
         run: docker build -t ${{ env.IMAGE_NAME }} .
