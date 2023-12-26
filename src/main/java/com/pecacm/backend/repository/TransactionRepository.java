@@ -1,9 +1,11 @@
 package com.pecacm.backend.repository;
 
 import com.pecacm.backend.entities.Transaction;
+import com.pecacm.backend.entities.User;
 import com.pecacm.backend.enums.EventRole;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -16,8 +18,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
 
     Page<Transaction> findByUserIdAndRole(Integer userId, EventRole role, PageRequest pageRequest);
 
-    @Query("select t from Transaction t where t.user.email = ?1 order by t.date DESC")
-    Page<Transaction> findByUser_EmailOrderByDateDesc(String email, PageRequest pageRequest);
+    List<Transaction> findAllByUserOrderByDate(User user,PageRequest pageRequest);
 
     @Query("SELECT t from Transaction t WHERE t.event.id = :eventId AND t.role IN :roles")
     List<Transaction> findListByEventIdAndRoles(Integer eventId, List<EventRole> roles);

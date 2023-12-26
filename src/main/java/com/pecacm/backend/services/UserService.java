@@ -220,13 +220,11 @@ public class UserService implements UserDetailsService {
     }
 
     public List<Transaction> getUserTransactions(String email, Integer offset, Integer pageSize) {
-        List<Transaction> transactions = new ArrayList<>();
-        transactionRepository.findByUser_EmailOrderByDateDesc(email, PageRequest.of(offset, pageSize)).forEach(transactions::add);
-        return transactions;
+        return transactionRepository.findAllByUserOrderByDate(getUserByEmail(email),PageRequest.of(offset, pageSize));
     }
 
-    public List<User> getFilteredUserList(String query){
-        return userRepository.findAllBySearchQuery(query);
+    public List<User> getFilteredUserList(String query,boolean onlyVerified){
+        return userRepository.findAllBySearchQuery(query,onlyVerified);
     }
 
     public List<User> getUserByRole(Role role) {

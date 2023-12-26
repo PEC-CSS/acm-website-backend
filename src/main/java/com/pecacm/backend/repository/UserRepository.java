@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -49,8 +50,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Long countByXpGreaterThan(Integer xp);
 
     Page<User> findAllByOrderByXpDesc(PageRequest pageRequest);
-    @Query("SELECT u FROM User u WHERE SPLIT_PART(u.email, '.', 1) ILIKE %:query% ORDER BY u.id LIMIT 10")
-    List<User> findAllBySearchQuery(String query);
+    @Query("SELECT u FROM User u " +
+            "WHERE SPLIT_PART(u.email, '.', 1) ILIKE %:query% " +
+            "AND (:verifiedOnly = false OR u.verified = true) " +
+            "ORDER BY u.id LIMIT 10")
+    List<User> findAllBySearchQuery(@Param("query") String query, @Param("verifiedOnly") Boolean verifiedOnly);
 
     List<User> findAllByDesignation(Role role);
 
