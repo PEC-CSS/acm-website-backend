@@ -139,4 +139,9 @@ public class EventsController {
         Event nextEvent = eventService.getNextEvent(currDateTime);
         return ResponseEntity.ok(nextEvent);
     }
+
+    @GetMapping("/search/pattern")
+    public List<Event> searchEventByPattern(@RequestParam String query){
+        return eventService.searchEventByPattern(query);
+    }
 }
