@@ -1,6 +1,7 @@
 package com.pecacm.backend.repository;
 
 import com.pecacm.backend.entities.Event;
+import com.pecacm.backend.entities.User;
 import com.pecacm.backend.enums.Branch;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,5 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
     @Query("SELECT e from Event e WHERE e.startDate > :currDateTime ORDER BY e.startDate ASC LIMIT 1")
     Event getNearestEvent(@Param("currDateTime") LocalDateTime currDate);
     List<Event> findAllByStartDateGreaterThanEqualAndEndDateLessThanEqual(LocalDateTime startDate, LocalDateTime endDate, PageRequest pageRequest);
+    List<Event> findTop5ByTitleContainingIgnoreCase(String title);
 }

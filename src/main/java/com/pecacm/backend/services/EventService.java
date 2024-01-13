@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Stream;
 
 @Service
 public class EventService {
@@ -150,5 +149,9 @@ public class EventService {
 
     public Event getNextEvent(LocalDateTime currDateTime) {
         return eventRepository.getNearestEvent(currDateTime);
+    }
+
+    public List<Event> searchEventByPattern(String query) {
+        return eventRepository.findTop5ByTitleContainingIgnoreCase(query);
     }
 }
