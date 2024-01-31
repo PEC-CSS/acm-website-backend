@@ -23,7 +23,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
             logger.info("Sent response: {} {} with status {}", request.getMethod(), request.getRequestURI(), response.getStatus());
         }
         else {
-            logger.error("Sent response: {} {} with status {} and exception {}", request.getMethod(), request.getRequestURI(), response.getStatus(), ex.getMessage());
+            logger.error("Sent response: {} {} with status {} and exception {}", request.getMethod(), request.getRequestURI(), response.getStatus(), ex.getStackTrace());
         }
     }
 }
