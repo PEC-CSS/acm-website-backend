@@ -11,9 +11,8 @@ public class LoggingInterceptor implements HandlerInterceptor {
     private static final Logger logger = LoggerFactory.getLogger(LoggingInterceptor.class);
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // Log request details
-        logger.info("Received request: {} {} from {}", request.getMethod(), request.getRequestURI(), request.getRemoteAddr());
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        logger.info("Received request: {} {} Authorization={}", request.getMethod(), request.getRequestURI(), request.getHeader("Authorization"));
         return true;
     }
 
