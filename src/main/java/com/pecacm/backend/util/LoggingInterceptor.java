@@ -17,9 +17,13 @@ public class LoggingInterceptor implements HandlerInterceptor {
         return true;
     }
 
-//    @Override
-//    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-//        // Log response details
-//        logger.info("Sent response: {} {} with status {} and exception {}", request.getMethod(), request.getRequestURI(), response.getStatus(), ex);
-//    }
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        if(ex == null) {
+            logger.info("Sent response: {} {} with status {}", request.getMethod(), request.getRequestURI(), response.getStatus());
+        }
+        else {
+            logger.error("Sent response: {} {} with status {} and exception {}", request.getMethod(), request.getRequestURI(), response.getStatus(), ex.getMessage());
+        }
+    }
 }
