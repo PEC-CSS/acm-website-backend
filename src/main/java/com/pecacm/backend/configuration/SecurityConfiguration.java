@@ -1,6 +1,7 @@
 package com.pecacm.backend.configuration;
 
 import com.pecacm.backend.filters.JwtFilter;
+import com.pecacm.backend.filters.SimpleCORSFilter;
 import com.pecacm.backend.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -25,11 +26,13 @@ public class SecurityConfiguration {
 
     private final UserService userService;
     private final JwtFilter jwtFilter;
+    private final SimpleCORSFilter simpleCORSFilter;
 
     @Autowired
-    public SecurityConfiguration(UserService userService, JwtFilter jwtFilter) {
+    public SecurityConfiguration(UserService userService, JwtFilter jwtFilter, SimpleCORSFilter simpleCORSFilter) {
         this.userService = userService;
         this.jwtFilter = jwtFilter;
+        this.simpleCORSFilter = simpleCORSFilter;
     }
 
     @Bean
@@ -54,6 +57,7 @@ public class SecurityConfiguration {
                 .sessionManagement(
                         s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                .addFilterBefore(simpleCORSFilter, JwtFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
