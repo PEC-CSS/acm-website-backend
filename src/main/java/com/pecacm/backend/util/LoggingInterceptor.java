@@ -12,7 +12,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        logger.info("Received request: {} {} Authorization={}", request.getMethod(), request.getRequestURI(), request.getHeader("Authorization"));
+        logger.info("Received request: {} {}", request.getMethod(), request.getRequestURI());
         return true;
     }
 
