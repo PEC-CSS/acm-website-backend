@@ -60,4 +60,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     List<User> findByEmailIn(List<String> emails);
 
+    List<User> findBySidIn(List<Integer> sids);
+
 }

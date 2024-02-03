@@ -6,6 +6,7 @@ import com.pecacm.backend.enums.Branch;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
+import com.pecacm.backend.model.EndEventSidDetails;
 import com.pecacm.backend.response.EventAttendeesResponse;
 import com.pecacm.backend.services.EventService;
 import jakarta.annotation.Nonnull;
@@ -129,6 +130,13 @@ public class EventsController {
     @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
     public ResponseEntity<Void> endEvent(@PathVariable Integer eventId, @RequestBody EndEventDetails endEventDetails) {
         eventService.endEvent(eventId, endEventDetails);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{eventId}/end/sid")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
+    public ResponseEntity<Void> endEventBySid(@PathVariable Integer eventId, @RequestBody EndEventSidDetails endEventSidDetails) {
+        eventService.endEventBySid(eventId, endEventSidDetails);
         return ResponseEntity.ok().build();
     }
 

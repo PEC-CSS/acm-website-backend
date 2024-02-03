@@ -7,6 +7,7 @@ import com.pecacm.backend.enums.Branch;
 import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.EndEventDetails;
+import com.pecacm.backend.model.EndEventSidDetails;
 import com.pecacm.backend.repository.EventRepository;
 import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
@@ -20,7 +21,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class EventService {
@@ -124,6 +128,23 @@ public class EventService {
 
         event.setEnded(true);
         eventRepository.save(event);
+    }
+
+    @Transactional
+    public void endEventBySid(Integer eventId, EndEventSidDetails endEventSidDetails) {
+        List<String> participants = userRepository.findBySidIn(endEventSidDetails.getParticipants())
+                .stream()
+                .map(User::getEmail)
+                .toList();
+        EndEventDetails endEventDetails = EndEventDetails.builder()
+                .contributors(endEventSidDetails.getContributors())
+                .publicity(endEventSidDetails.getPublicity())
+                .participants(participants)
+                .contributorXp(endEventSidDetails.getContributorXp())
+                .publicityXp(endEventSidDetails.getPublicityXp())
+                .participantXp(endEventSidDetails.getParticipantXp())
+                .build();
+        endEvent(eventId, endEventDetails);
     }
 
     private void updateEventRoles(List<String> emails, EventRole eventRole, Event event, EndEventDetails endEventDetails) {
