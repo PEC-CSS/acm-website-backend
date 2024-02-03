@@ -32,7 +32,7 @@ public class Event {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
-    @Column(name="description", nullable = false)
+    @Column(name="description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "related_link")
