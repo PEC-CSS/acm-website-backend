@@ -189,6 +189,14 @@ public class UserService implements UserDetailsService {
 
     public List<UserEventDetails> getEventsForUserWithRole(EventRole eventRole, Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return getUserEventDetails(email, eventRole, pageSize, offset);
+    }
+
+    public List<UserEventDetails> getEventsForUserWithRole(String email, EventRole eventRole, Integer pageSize, Integer offset) {
+        return getUserEventDetails(email, eventRole, pageSize, offset);
+    }
+
+    private List<UserEventDetails> getUserEventDetails(String email, EventRole eventRole, Integer pageSize, Integer offset) {
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserIdAndRole(user.getId(), eventRole, PageRequest.of(offset, pageSize));
 
@@ -205,6 +213,14 @@ public class UserService implements UserDetailsService {
 
     public List<UserEventDetails> getEventsForUser(Integer pageSize, Integer offset) {
         String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return getUserEventDetails(email, pageSize, offset);
+    }
+
+    public List<UserEventDetails> getEventsForUser(String email,Integer pageSize, Integer offset) {
+        return getUserEventDetails(email, pageSize, offset);
+    }
+
+    private List<UserEventDetails> getUserEventDetails(String email, Integer pageSize, Integer offset) {
         User user = this.loadUserByUsername(email);
         Page<Transaction> transactionsPage = transactionRepository.findByUserId(user.getId(), PageRequest.of(offset, pageSize));
 

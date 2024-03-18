@@ -2,7 +2,6 @@ package com.pecacm.backend.controllers;
 
 import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Transaction;
-import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.entities.VerificationToken;
 import com.pecacm.backend.enums.EventRole;
@@ -13,10 +12,9 @@ import com.pecacm.backend.response.AuthenticationResponse;
 import com.pecacm.backend.response.RegisterResponse;
 import com.pecacm.backend.response.UserEventDetails;
 import com.pecacm.backend.services.EmailService;
-import com.pecacm.backend.services.VerificationService;
 import com.pecacm.backend.services.JwtService;
 import com.pecacm.backend.services.UserService;
-import org.springframework.data.domain.Page;
+import com.pecacm.backend.services.VerificationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -192,8 +190,25 @@ public class UserController {
 
     }
 
+    @GetMapping("/{email}/events")
+    @PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
+    public ResponseEntity<List<UserEventDetails>> getEventsForUserEmail(@PathVariable String email, @RequestParam @Nullable EventRole eventRole, @RequestParam @Nullable Integer pageSize, @RequestParam @Nullable Integer offset) {
+        if (offset == null) offset = 0;
+        if (pageSize == null) pageSize = 20; // returning first 20 users
+
+        if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+
+        if (eventRole != null) {
+            return ResponseEntity.ok(userService.getEventsForUserWithRole(email, eventRole, pageSize, offset));
+        }
+
+        return ResponseEntity.ok(userService.getEventsForUser(email, pageSize, offset));
+
+    }
+
     @GetMapping("/search")
-    public List<User> getFilteredUsers(@RequestParam String query, @RequestParam(required = false,defaultValue = "false") Boolean onlyVerified){
-        return userService.getFilteredUserList(query,onlyVerified);
+    public List<User> getFilteredUsers(@RequestParam String query, @RequestParam(required = false, defaultValue = "false") Boolean onlyVerified) {
+        return userService.getFilteredUserList(query, onlyVerified);
     }
 }
