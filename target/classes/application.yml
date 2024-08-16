@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+  ssl:
+    enabled: false
+    enabled-protocols: TLSv1.2
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+  tomcat:
+    accesslog:
+      request-attributes-enabled: true
+
+spring:
+  datasource:
+    url: ${POSTGRESQL_DB_URL}
+    username: ${POSTGRESQL_DB_USER}
+    password: ${POSTGRESQL_DB_PASSWORD}
+    hikari:
+      connectionTimeout: 10000
+      maximumPoolSize: 5
+    driverClassName: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show-sql: true
+        use_sql_comments: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_EMAIL}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+jwt:
+  secret: nyanpasu
+verify:
+  base:
+    frontend: https://pecacm.com/
+
+logging:
+  file:
+    name: /pecacm/logs/backend.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  level:
+    org.springframework: INFO
