@@ -16,12 +16,12 @@ server:
 
 spring:
   datasource:
-#    url: ${POSTGRESQL_DB_URL}
-#    username: ${POSTGRESQL_DB_USER}
-#    password: ${POSTGRESQL_DB_PASSWORD}
-    url: jdbc:postgresql://localhost:5432/acm
-    username: acmsecy
-    password: acmheads
+    url: ${POSTGRESQL_DB_URL}
+    username: ${POSTGRESQL_DB_USER}
+    password: ${POSTGRESQL_DB_PASSWORD}
+#    url: jdbc:postgresql://localhost:5432/acm
+#    username: acmsecy
+#    password: acmheads
     hikari:
       maximumPoolSize: 20
       minimumIdle: 5
