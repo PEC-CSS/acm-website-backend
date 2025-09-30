@@ -15,8 +15,10 @@ server:
       request-attributes-enabled: true
 
 spring:
-  profiles:
-    active: "local"
+
+  docker:
+    compose:
+      enabled: false
   datasource:
     url: ${POSTGRESQL_DB_URL}
     username: ${POSTGRESQL_DB_USER}
