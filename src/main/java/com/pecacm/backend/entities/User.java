@@ -60,6 +60,7 @@ public class User implements UserDetails {
         return List.of(new SimpleGrantedAuthority("ROLE_" + designation.toString()));
     }
 
+
     @Override
     @JsonIgnore
     public String getUsername() {
