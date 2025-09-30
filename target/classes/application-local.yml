@@ -5,9 +5,9 @@ spring:
     compose:
       enabled: false
   datasource:
-    url: jdbc:postgresql://localhost:5432/acm
+    url: jdbc:postgresql://db.bujnagbmqjzifgmqsxkc.supabase.co:5432/postgres
     username: postgres
-    password: 12345678
+    password: 53zIJPwXo9qzoSw8
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

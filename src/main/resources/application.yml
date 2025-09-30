@@ -15,6 +15,7 @@ server:
       request-attributes-enabled: true
 
 spring:
+
   docker:
     compose:
       enabled: false
