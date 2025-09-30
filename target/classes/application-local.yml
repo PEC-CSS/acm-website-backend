@@ -5,9 +5,9 @@ spring:
     compose:
       enabled: false
   datasource:
-    url: jdbc:postgresql://db.bujnagbmqjzifgmqsxkc.supabase.co:5432/postgres
+    url: jdbc:postgresql://localhost:5432/acm
     username: postgres
-    password: 53zIJPwXo9qzoSw8
+    password: 12345678
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -21,8 +21,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: acmcss@pec.edu.in
-    password: pzsdhgeqmjtnbdpp
+    username: your_email
+    password: your_app_password
     properties:
       mail:
         smtp:
