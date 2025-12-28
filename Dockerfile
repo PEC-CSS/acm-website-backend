@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:17-jre
 
 VOLUME /tmp
 EXPOSE 8080
