@@ -1,4 +1,5 @@
-FROM openjdk:latest
+FROM eclipse-temurin:21-jre
+
 VOLUME /tmp
 EXPOSE 8080
 
@@ -7,7 +8,6 @@ LABEL version="1.0"
 LABEL description="Backend API for the official website of acmcss"
 
 ARG JAR_FILE=target/backend-1.0.1.jar
-
-ADD ${JAR_FILE} app.jar
+COPY ${JAR_FILE} app.jar
 
 ENTRYPOINT ["java","-jar","/app.jar"]
