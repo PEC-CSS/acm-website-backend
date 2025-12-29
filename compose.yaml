@@ -1,15 +1,29 @@
 services:
   postgres-database:
-    image: 'postgres:latest'
+    image: 'postgres:15'
     container_name: postgres-database
     environment:
-      - 'POSTGRES_DB=acm'
-      - 'POSTGRES_PASSWORD=acmheads'
-      - 'POSTGRES_USER=acmsecy'
+      - POSTGRES_DB=acm
+      - POSTGRES_USER=acmsecy
+      - POSTGRES_PASSWORD=acmheads
     ports:
-      - '5432:5432'
+      - "5432:5432"
     volumes:
-      - db-data:/var/lib/backup/data
+      - db-data:/var/lib/postgresql/data
+
+  backend:
+    image: pecacm/acm-website:1.1.12
+    container_name: acm-backend
+    environment:
+      - POSTGRESQL_DB_URL=jdbc:postgresql://postgres-database:5432/acm
+      - POSTGRESQL_DB_USER=acmsecy
+      - POSTGRESQL_DB_PASSWORD=acmheads
+      - SMTP_EMAIL=youremail@gmail.com
+      - SMTP_PASSWORD=yourpassword
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-database
 
 volumes:
   db-data:
