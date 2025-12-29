@@ -12,7 +12,8 @@ services:
       - db-data:/var/lib/postgresql/data
 
   backend:
-    image: pecacm/acm-website:1.1.12
+    # image: pecacm/acm-backend:local # build your own image if you want to seed data
+    image : pecacm/acm-website:1.1.12
     container_name: acm-backend
     environment:
       - POSTGRESQL_DB_URL=jdbc:postgresql://postgres-database:5432/acm
