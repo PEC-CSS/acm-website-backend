@@ -55,7 +55,7 @@ VALUES (2, 2024, 'CSE', 'Member', NULL, 'manjotsinghoberoi.btcse20@pec.edu.in', 
 INSERT INTO public.users (id, batch, branch, designation, display_picture, email, name, password, student_id, verified,
                           xp_total)
 VALUES (1, 2024, 'CSE', 'Admin', NULL, 'harshpreetsinghjohar.btcse20@pec.edu.in', 'Harshpreet Singh Johar',
-        '$2a$10$d/mEUVISoHIQumX3MZE2iuWbhtqIlCuW5xIEw9vxEuIbWx/TMfcWO', 20103076, 't', 10);
+        '$2a$10$RJzQiTkb/ZbBDwSYXTYTYeo7gKBDn7Q0ntqLBW5nCIYZZd8/NkuFu', 20103076, 't', 10);
 
 --
 -- Data for Name: transactions; Type: TABLE DATA; Schema: public; Owner: acmsecy
