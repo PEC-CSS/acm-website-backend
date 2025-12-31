@@ -17,6 +17,29 @@ Backend of the official website of PEC ACM CSS
 
 > You need Intellij IDEA Ultimate, avail it by student discount
 
+### For Frontend Development (Docker)
+
+1. Create `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+   Edit `.env` with your credentials (especially POSTGRES_PASSWORD and SMTP credentials)
+
+2. Start the backend:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Backend is now running at: `http://localhost:8080`
+
+4. When done, stop the backend:
+   ```bash
+   docker-compose stop
+   ```
+
+> [!WARNING]
+> Use `docker-compose stop` to pause services. Only use `docker-compose down` if you want to completely remove containers and networks. Use `docker-compose down -v` to also remove database data (full reset).
+
 ## Instructions
 
 - Always work in separate branch for each feature.
