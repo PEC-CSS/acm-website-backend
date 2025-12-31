@@ -3,27 +3,41 @@ services:
     image: 'postgres:15'
     container_name: postgres-database
     environment:
-      - POSTGRES_DB=acm
-      - POSTGRES_USER=acmsecy
-      - POSTGRES_PASSWORD=acmheads
-    ports:
-      - "5432:5432"
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acmsecy -d acm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - acm-network
+
 
   backend:
     image : 6791042/seed-acm-backend:latest
     container_name: acm-backend
     environment:
-      - POSTGRESQL_DB_URL=jdbc:postgresql://postgres-database:5432/acm
-      - POSTGRESQL_DB_USER=acmsecy
-      - POSTGRESQL_DB_PASSWORD=acmheads
-      - SMTP_EMAIL=youremail@gmail.com
-      - SMTP_PASSWORD=yourpassword
+      - POSTGRESQL_DB_URL=jdbc:postgresql://postgres-database:5432/${POSTGRES_DB}
+      - POSTGRESQL_DB_USER=${POSTGRES_USER}
+      - POSTGRESQL_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - SMTP_EMAIL=${SMTP_EMAIL}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:
-      - postgres-database
+      postgres-database:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - acm-network
 
 volumes:
   db-data:
+
+networks:
+  acm-network:
+    driver: bridge
