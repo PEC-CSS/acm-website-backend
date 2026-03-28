@@ -62,7 +62,7 @@ jwt:
   secret: nyanpasu
 verify:
   base:
-    frontend: https://pecacm.com/
+    frontend: https://pecacm.in/
 
 logging:
   file:
