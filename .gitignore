@@ -30,3 +30,4 @@ build/
 
 ### ENVIRONMENT ###
 .env
+secret.json

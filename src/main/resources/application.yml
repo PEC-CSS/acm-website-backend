@@ -20,12 +20,9 @@ spring:
     compose:
       enabled: false
   datasource:
-    url: ${POSTGRESQL_DB_URL}
-    username: ${POSTGRESQL_DB_USER}
-    password: ${POSTGRESQL_DB_PASSWORD}
-    #    url: jdbc:postgresql://localhost:5432/acm
-    #    username: acmsecy
-    #    password: acmheads
+    url: ${POSTGRESQL_DB_URL:jdbc:postgresql://localhost:5432/acm}
+    username: ${POSTGRESQL_DB_USER:acmsecy}
+    password: ${POSTGRESQL_DB_PASSWORD:acmheads}
     hikari:
       maximumPoolSize: 20
       minimumIdle: 5
@@ -57,6 +54,10 @@ spring:
           starttls:
             enable: true
             required: true
+
+  gmail-api:
+    refresh-token: ${GMAIL_REFRESH_TOKEN}
+    user-email: ${GMAIL_USER_EMAIL}
 
 jwt:
   secret: nyanpasu

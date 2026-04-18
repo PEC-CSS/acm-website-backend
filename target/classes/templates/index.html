@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>ACM Certificate Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
+        .hero { background: linear-gradient(135deg, #004e92 0%, #000428 100%); color: white; padding: 40px 0; border-radius: 0 0 20px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .card { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: -30px; }
+        .btn-primary { background-color: #004e92; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 600; }
+        .section-title { color: #004e92; margin-bottom: 25px; font-weight: 700; border-bottom: 3px solid #004e92; display: inline-block; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="hero text-center">
+    <h1 class="display-4 fw-bold">ACM Certificate Portal</h1>
+    <p class="lead">Upload designs from Canva and generate certificates instantly.</p>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card p-5">
+                
+                <div class="row">
+                    <!-- Step 1: Upload Template -->
+                    <div class="col-md-6 border-end">
+                        <h3 class="section-title">1. Setup Template</h3>
+                        <form th:action="@{/ui/upload}" method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Select Event</label>
+                                <select name="eventId" class="form-select" required>
+                                    <option th:each="event : ${events}" th:value="${event.id}" th:text="${event.title}"></option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Canva PDF Template (with AcroForm fields)</label>
+                                <input type="file" name="file" class="form-control" accept="application/pdf" required>
+                            </div>
+                            <button type="submit" class="btn btn-outline-primary w-100">Upload & Sync</button>
+                        </form>
+                        <div th:if="${param.success}" class="alert alert-success mt-3 py-2 text-center small">Template Uploaded Successfully!</div>
+                    </div>
+
+                    <!-- Step 2: Individual Download -->
+                    <div class="col-md-3 border-end ps-md-4">
+                        <h3 class="section-title">2. Download</h3>
+                        <form th:action="@{/ui/generate}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Event</label>
+                                <select name="eventId" class="form-select form-select-sm" required>
+                                    <option th:each="event : ${events}" th:value="${event.id}" th:text="${event.title}"></option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Full Name</label>
+                                <input type="text" name="recipientName" class="form-control form-control-sm" placeholder="Search..." required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 btn-sm shadow-sm">Get PDF</button>
+                        </form>
+                    </div>
+
+                    <!-- Step 3: Mass Mailing -->
+                    <div class="col-md-3 ps-md-4">
+                        <h3 class="section-title">3. Mass Mail</h3>
+                        
+                        <!-- CSV Upload -->
+                        <form th:action="@{/ui/mass-mail}" method="post" enctype="multipart/form-data" class="mb-4">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold small">List (CSV: Name,Email)</label>
+                                <input type="file" name="file" class="form-control form-control-sm" accept=".csv" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Event</label>
+                                <select name="eventId" class="form-select form-select-sm" required>
+                                    <option th:each="event : ${events}" th:value="${event.id}" th:text="${event.title}"></option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 btn-sm shadow-sm" onclick="return confirm('Trigger mail job from CSV?')">From CSV</button>
+                        </form>
+
+                        <div class="text-center text-muted small mb-3">— OR —</div>
+
+                        <!-- Auto Sync -->
+                        <form th:action="@{/ui/send-to-registered}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Directly from Event Database</label>
+                                <select name="eventId" class="form-select form-select-sm" required>
+                                    <option th:each="event : ${events}" th:value="${event.id}" th:text="${event.title}"></option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-outline-success w-100 btn-sm shadow-sm" onclick="return confirm('Send to all participants currently registered in DB?')">Sync Registered</button>
+                        </form>
+
+                        <div th:if="${param.count}" class="alert alert-info mt-3 py-1 text-center x-small" style="font-size: 0.75rem;">Job started for <span th:text="${param.count}"></span> users</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container text-center text-muted small mt-4">
+    <p>&copy; 2026 Association for Computing Machinery Internal Tools</p>
+</div>
+
+</body>
+</html>
