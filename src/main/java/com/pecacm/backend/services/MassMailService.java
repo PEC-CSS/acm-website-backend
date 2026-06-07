@@ -43,6 +43,30 @@ public class MassMailService {
     @Value("${spring.gmail-api.user-email}")
     private String userEmail;
 
+    @jakarta.annotation.PostConstruct
+    public void validateGmailConfig() {
+        if (refreshToken == null || refreshToken.trim().isEmpty() || "${spring.gmail-api.refresh-token}".equals(refreshToken)) {
+            log.warn("Gmail API refresh-token is not configured. Mass mailing will fail.");
+        }
+        if (userEmail == null || userEmail.trim().isEmpty() || "${spring.gmail-api.user-email}".equals(userEmail)) {
+            log.warn("Gmail API user-email is not configured. Mass mailing will fail.");
+        }
+        try {
+            ClassPathResource resource = new ClassPathResource("secret.json");
+            if (!resource.exists()) {
+                log.warn("secret.json was not found in classpath. Mass mailing will fail.");
+            } else {
+                JsonNode root = objectMapper.readTree(resource.getInputStream());
+                JsonNode secrets = root.has("web") ? root.get("web") : root.get("installed");
+                if (secrets == null) {
+                    log.warn("Invalid secret.json file - No 'web' or 'installed' object found.");
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to validate secret.json file: {}", e.getMessage());
+        }
+    }
+
     private Gmail getGmailService() throws Exception {
         ClassPathResource resource = new ClassPathResource("secret.json");
         JsonNode root = objectMapper.readTree(resource.getInputStream());

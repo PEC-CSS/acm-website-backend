@@ -31,3 +31,14 @@ build/
 ### ENVIRONMENT ###
 .env
 secret.json
+.jdk
+
+### Build ###
+target/
+
+### Demo ###
+certificate.db
+*.pdf
+uploads/
+*.py
+*.csv

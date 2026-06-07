@@ -35,7 +35,10 @@ public class CertificateController {
     private final EventRepository eventRepository;
 
     @GetMapping
-    public List<Certificate> getAllCertificates() {
+    public List<Certificate> getAllCertificates(@RequestParam(required = false) Integer eventId) {
+        if (eventId != null) {
+            return certificateService.getCertificatesByEventId(eventId);
+        }
         return certificateService.getAllCertificates();
     }
 
@@ -75,12 +78,7 @@ public class CertificateController {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found with id: " + eventId));
         
-        // This is a simplified fetch, you might want to fetch only certificates for this event
-        // In the original tool, Certificate had an Event reference.
-        // We'll filter certificates by event here.
-        List<Certificate> certificates = certificateService.getAllCertificates().stream()
-                .filter(c -> c.getEvent() != null && c.getEvent().getId().equals(eventId))
-                .toList();
+        List<Certificate> certificates = certificateService.getCertificatesByEventId(eventId);
 
         if (certificates.isEmpty()) {
             return ResponseEntity.badRequest().body("No certificates found for this event.");
@@ -103,13 +101,17 @@ public class CertificateController {
             
             while ((nextLine = reader.readNext()) != null) {
                 if (nextLine.length >= 2) {
-                    Certificate cert = Certificate.builder()
-                            .recipientName(nextLine[0].trim())
-                            .recipientEmail(nextLine[1].trim())
-                            .event(event)
-                            .issueDate(LocalDate.now().toString())
-                            .build();
-                    certificates.add(certificateService.createCertificate(cert));
+                    String name = nextLine[0].trim();
+                    String email = nextLine[1].trim();
+                    if (!certificateService.existsByEmailAndEvent(email, eventId)) {
+                        Certificate cert = Certificate.builder()
+                                .recipientName(name)
+                                .recipientEmail(email)
+                                .event(event)
+                                .issueDate(LocalDate.now().toString())
+                                .build();
+                        certificates.add(certificateService.createCertificate(cert));
+                    }
                 }
             }
         } catch (IOException | CsvValidationException e) {

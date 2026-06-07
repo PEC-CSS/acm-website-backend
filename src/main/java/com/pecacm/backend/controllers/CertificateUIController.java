@@ -128,13 +128,17 @@ public class CertificateUIController {
                 String[] line;
                 while ((line = reader.readNext()) != null) {
                     if (line.length >= 2) {
-                        Certificate cert = Certificate.builder()
-                                .recipientName(line[0].trim())
-                                .recipientEmail(line[1].trim())
-                                .event(event)
-                                .issueDate(LocalDate.now().toString())
-                                .build();
-                        certificates.add(certificateService.createCertificate(cert));
+                        String name = line[0].trim();
+                        String email = line[1].trim();
+                        if (!certificateService.existsByEmailAndEvent(email, eventId)) {
+                            Certificate cert = Certificate.builder()
+                                    .recipientName(name)
+                                    .recipientEmail(email)
+                                    .event(event)
+                                    .issueDate(LocalDate.now().toString())
+                                    .build();
+                            certificates.add(certificateService.createCertificate(cert));
+                        }
                     }
                 }
             }
@@ -168,20 +172,19 @@ public class CertificateUIController {
 
             List<Certificate> certificates = new ArrayList<>();
             for (Transaction tx : transactions) {
-                // Simple logic: create a new certificate if doesn't exist for this user & event
-                // (Using a basic search by email for now as a proxy for 'has already received')
                 String email = tx.getUser().getEmail();
                 String name = tx.getUser().getName();
                 
-                Certificate cert = Certificate.builder()
-                        .recipientName(name)
-                        .recipientEmail(email)
-                        .event(event)
-                        .issueDate(LocalDate.now().toString())
-                        .build();
-                
-                // Save it
-                certificates.add(certificateService.createCertificate(cert));
+                if (!certificateService.existsByEmailAndEvent(email, eventId)) {
+                    Certificate cert = Certificate.builder()
+                            .recipientName(name)
+                            .recipientEmail(email)
+                            .event(event)
+                            .issueDate(LocalDate.now().toString())
+                            .build();
+                    
+                    certificates.add(certificateService.createCertificate(cert));
+                }
             }
 
             massMailService.sendCertificates(event, certificates);

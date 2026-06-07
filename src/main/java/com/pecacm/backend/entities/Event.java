@@ -37,12 +37,14 @@ public class Event {
     private String description;
 
     @Column(name = "related_link")
+    @Builder.Default
     private String relatedLink = "";
 
     @Column(name = "venue")
     private String venue;
 
     @Column(name = "ended")
+    @Builder.Default
     private boolean ended = false;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

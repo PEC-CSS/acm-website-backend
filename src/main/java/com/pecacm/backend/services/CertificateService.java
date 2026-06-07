@@ -19,6 +19,14 @@ public class CertificateService {
         return certificateRepository.findAll();
     }
 
+    public List<Certificate> getCertificatesByEventId(Integer eventId) {
+        return certificateRepository.findByEventId(eventId);
+    }
+
+    public boolean existsByEmailAndEvent(String email, Integer eventId) {
+        return certificateRepository.existsByRecipientEmailAndEventId(email, eventId);
+    }
+
     public Certificate getCertificateById(Long id) {
         return certificateRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Certificate not found with id: " + id));

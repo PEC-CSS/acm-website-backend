@@ -30,6 +30,7 @@ public class Transaction {
     private Event event;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private EventRole role = EventRole.PARTICIPANT;
 
     @Column(name = "date")
