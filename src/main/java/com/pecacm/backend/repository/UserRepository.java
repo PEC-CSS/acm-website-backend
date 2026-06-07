@@ -50,10 +50,10 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Long countByXpGreaterThan(Integer xp);
 
     Page<User> findAllByOrderByXpDesc(PageRequest pageRequest);
-    @Query("SELECT u FROM User u " +
-            "WHERE SPLIT_PART(u.email, '.', 1) ILIKE %:query% " +
-            "AND (:verifiedOnly = false OR u.verified = true) " +
-            "ORDER BY u.id LIMIT 10")
+    @Query(value = "SELECT * FROM users " +
+            "WHERE SPLIT_PART(email, '.', 1) ILIKE %:query% " +
+            "AND (:verifiedOnly = false OR verified = true) " +
+            "ORDER BY id LIMIT 10", nativeQuery = true)
     List<User> findAllBySearchQuery(@Param("query") String query, @Param("verifiedOnly") Boolean verifiedOnly);
 
     List<User> findAllByDesignation(Role role);

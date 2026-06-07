@@ -38,11 +38,10 @@ public class SecurityConfiguration {
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder passwordEncoder, UserService userService)
             throws Exception {
-        // TODO: and() is deprecated, replace in future
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(userService)
-                .passwordEncoder(passwordEncoder)
-                .and().build();
+        AuthenticationManagerBuilder builder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        builder.userDetailsService(userService)
+                .passwordEncoder(passwordEncoder);
+        return builder.build();
     }
 
     @Bean
@@ -52,6 +51,7 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         a -> a.requestMatchers("/error").anonymous()
+                                .requestMatchers("/api/certificates/**", "/api/templates/**").permitAll() // Adjust security as needed
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(

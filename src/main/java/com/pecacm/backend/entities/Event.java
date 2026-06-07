@@ -1,10 +1,11 @@
 package com.pecacm.backend.entities;
 
-import com.pecacm.backend.enums.Branch;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+
+import com.pecacm.backend.enums.Branch;
 
 @Entity
 @Getter
@@ -36,11 +37,17 @@ public class Event {
     private String description;
 
     @Column(name = "related_link")
+    @Builder.Default
     private String relatedLink = "";
 
     @Column(name = "venue")
     private String venue;
 
     @Column(name = "ended")
+    @Builder.Default
     private boolean ended = false;
+
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    private Template template;
 }

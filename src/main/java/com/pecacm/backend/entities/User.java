@@ -46,12 +46,15 @@ public class User implements UserDetails {
     private Integer sid;
 
     @Column(name = "verified")
+    @Builder.Default
     private Boolean verified = false;
 
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Role designation = Role.Member;
 
     @Column(name="xp_total", nullable = false)
+    @Builder.Default
     private Integer xp = 0;
 
     @Override
