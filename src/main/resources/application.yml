@@ -63,6 +63,9 @@ jwt:
 verify:
   base:
     frontend: https://pecacm.in/
+  reset:
+    # Frontend route that reads ?token= and collects the new password
+    path: forgot-password/change-password
 
 logging:
   file:

@@ -30,3 +30,12 @@ build/
 
 ### ENVIRONMENT ###
 .env
+.env.local
+.env.*.local
+
+### SECRETS ###
+# Credential files kept locally but never committed
+secret.json
+**/secret.json
+*-credentials.json
+serviceAccount*.json
