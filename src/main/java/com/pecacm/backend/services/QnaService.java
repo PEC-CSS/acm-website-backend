@@ -4,7 +4,6 @@ import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.constants.ErrorConstants;
 import com.pecacm.backend.entities.Answer;
 import com.pecacm.backend.entities.Question;
-import com.pecacm.backend.entities.QuestionUpvote;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.repository.AnswerRepository;
@@ -13,7 +12,6 @@ import com.pecacm.backend.repository.QuestionUpvoteRepository;
 import com.pecacm.backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.util.Strings;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -90,19 +88,12 @@ public class QnaService {
 
     @Transactional
     public Question upvoteQuestion(Integer questionId, String email) {
-        Question question = getQuestion(questionId);
+        getQuestion(questionId);
         User user = getVerifiedUser(email);
 
-        if (Boolean.TRUE.equals(questionUpvoteRepository.existsByQuestionIdAndUserId(questionId, user.getId()))) {
-            throw new AcmException(ErrorConstants.QUESTION_ALREADY_UPVOTED, HttpStatus.CONFLICT);
-        }
-
-        try {
-            questionUpvoteRepository.save(
-                    QuestionUpvote.builder().question(question).user(user).build()
-            );
-        } catch (DataIntegrityViolationException ex) {
-            // two upvotes racing each other, unique constraint decides the winner
+        // the insert itself decides the outcome, so a duplicate is reported without
+        // having to interpret a constraint violation that may mean something else
+        if (questionUpvoteRepository.insertIfAbsent(questionId, user.getId(), LocalDateTime.now()) == 0) {
             throw new AcmException(ErrorConstants.QUESTION_ALREADY_UPVOTED, HttpStatus.CONFLICT);
         }
         questionRepository.incrementUpvotes(questionId);
@@ -177,8 +168,11 @@ public class QnaService {
 
     // fills the transient flags the client needs, in one pass per page
     private List<Question> markCallerState(List<Question> questions, String email) {
+        if (email == null || questions.isEmpty()) {
+            return questions;
+        }
         Optional<User> user = userRepository.findByEmail(email);
-        if (user.isEmpty() || questions.isEmpty()) {
+        if (user.isEmpty()) {
             return questions;
         }
 
@@ -198,8 +192,11 @@ public class QnaService {
     }
 
     private List<Answer> markOwned(List<Answer> answers, String email) {
+        if (email == null || answers.isEmpty()) {
+            return answers;
+        }
         Optional<User> user = userRepository.findByEmail(email);
-        if (user.isEmpty() || answers.isEmpty()) {
+        if (user.isEmpty()) {
             return answers;
         }
 

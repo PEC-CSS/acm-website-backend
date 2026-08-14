@@ -8,12 +8,21 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
 public interface QuestionUpvoteRepository extends JpaRepository<QuestionUpvote, Integer> {
 
     Boolean existsByQuestionIdAndUserId(Integer questionId, Integer userId);
+
+    // returns 1 when the upvote was recorded and 0 when this user had already
+    // upvoted, so a duplicate never has to be inferred from a constraint violation
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "INSERT INTO question_upvotes (question_id, user_id, created_date) " +
+            "VALUES (:questionId, :userId, :createdDate) " +
+            "ON CONFLICT (question_id, user_id) DO NOTHING", nativeQuery = true)
+    int insertIfAbsent(@Param("questionId") Integer questionId, @Param("userId") Integer userId, @Param("createdDate") LocalDateTime createdDate);
 
     // returns the rows removed so the caller can tell whether it actually won the
     // delete, instead of checking existence first and racing another request
