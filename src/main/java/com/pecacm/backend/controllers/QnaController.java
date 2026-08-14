@@ -42,7 +42,7 @@ public class QnaController {
         if (pageSize == null) pageSize = 20; // returning first 20 questions
 
         if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
-        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be > 0", HttpStatus.BAD_REQUEST);
 
         return ResponseEntity.ok(qnaService.getQuestions(offset, pageSize, getLoggedInEmail()));
     }
@@ -92,7 +92,7 @@ public class QnaController {
         if (pageSize == null) pageSize = 20; // returning first 20 answers
 
         if (offset < 0) throw new AcmException("offset cannot be < 0", HttpStatus.BAD_REQUEST);
-        if (pageSize <= 0) throw new AcmException("pageSize must be >= 0", HttpStatus.BAD_REQUEST);
+        if (pageSize <= 0) throw new AcmException("pageSize must be > 0", HttpStatus.BAD_REQUEST);
 
         return ResponseEntity.ok(qnaService.getAnswersByQuestion(questionId, offset, pageSize, getLoggedInEmail()));
     }

@@ -30,8 +30,8 @@ public class Question {
 
     // questions are anonymous, asker is kept only for the edit/delete checks.
     // lazy because it is never serialized, only its id is compared
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     @JsonIgnore
     private User askedBy;
 

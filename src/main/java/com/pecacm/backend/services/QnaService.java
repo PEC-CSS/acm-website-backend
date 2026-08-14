@@ -115,11 +115,11 @@ public class QnaService {
         getQuestion(questionId);
         User user = getVerifiedUser(email);
 
-        if (!Boolean.TRUE.equals(questionUpvoteRepository.existsByQuestionIdAndUserId(questionId, user.getId()))) {
+        // the delete itself decides the outcome, so two concurrent removals cannot
+        // both decrement the counter for a single upvote row
+        if (questionUpvoteRepository.deleteByQuestionIdAndUserId(questionId, user.getId()) == 0) {
             throw new AcmException(ErrorConstants.QUESTION_NOT_UPVOTED, HttpStatus.CONFLICT);
         }
-
-        questionUpvoteRepository.deleteByQuestionIdAndUserId(questionId, user.getId());
         questionRepository.decrementUpvotes(questionId);
 
         return markCallerState(getQuestion(questionId), email);
