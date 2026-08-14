@@ -3,6 +3,10 @@ package com.pecacm.backend.constants;
 public class Constants {
     public static final String UPDATE_SUCCESS = "Successfully Updated";
 
+    /* Cooldown between two posts by the same user, to prevent spam */
+    public static final int QUESTION_COOLDOWN_MINUTES = 15;
+    public static final int ANSWER_COOLDOWN_MINUTES = 2;
+
     /* Authorization Constants */
     public static final String OR = " or ";
     public static final String HAS_ROLE_ADMIN = "hasRole('Admin')";

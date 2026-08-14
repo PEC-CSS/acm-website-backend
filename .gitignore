@@ -30,3 +30,8 @@ build/
 
 ### ENVIRONMENT ###
 .env
+
+### SECRETS ###
+# Credential files kept locally but never committed
+secret.json
+**/secret.json

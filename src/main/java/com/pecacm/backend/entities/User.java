@@ -8,6 +8,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -53,6 +54,15 @@ public class User implements UserDetails {
 
     @Column(name="xp_total", nullable = false)
     private Integer xp = 0;
+
+    // kept on the user so that deleting a post cannot reset the spam cooldown
+    @Column(name = "last_question_date")
+    @JsonIgnore
+    private LocalDateTime lastQuestionDate;
+
+    @Column(name = "last_answer_date")
+    @JsonIgnore
+    private LocalDateTime lastAnswerDate;
 
     @Override
     @JsonIgnore
