@@ -62,6 +62,12 @@ public class QnaService {
         );
     }
 
+    private Question getQuestionForUpdate(Integer questionId) {
+        return questionRepository.findByIdForUpdate(questionId).orElseThrow(() ->
+                new AcmException(ErrorConstants.QUESTION_NOT_FOUND + questionId, HttpStatus.NOT_FOUND)
+        );
+    }
+
     public Question getQuestion(Integer questionId, String email) {
         return markCallerState(getQuestion(questionId), email);
     }
@@ -78,7 +84,7 @@ public class QnaService {
     // upvotes and answers go first, they reference the question being removed
     @Transactional
     public void deleteQuestion(Integer questionId, String email) {
-        Question question = getQuestion(questionId);
+        Question question = getQuestionForUpdate(questionId);
         verifyAskedBy(question, email);
 
         questionUpvoteRepository.deleteAllByQuestion(question);
@@ -88,7 +94,7 @@ public class QnaService {
 
     @Transactional
     public Question upvoteQuestion(Integer questionId, String email) {
-        getQuestion(questionId);
+        getQuestionForUpdate(questionId);
         User user = getVerifiedUser(email);
 
         // the insert itself decides the outcome, so a duplicate is reported without
@@ -122,7 +128,7 @@ public class QnaService {
         User user = getVerifiedUser(email);
         // question is resolved before the cooldown so that answering a question
         // that does not exist reports that, rather than the rate limit
-        Question question = getQuestion(questionId);
+        Question question = getQuestionForUpdate(questionId);
         verifyAnswerCooldown(user);
 
         Answer answer = Answer.builder()
