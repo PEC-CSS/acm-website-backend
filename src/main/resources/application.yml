@@ -51,7 +51,11 @@ spring:
           starttls:
             enable: true
             required: true
+  # empty defaults keep the application bootable when certificates are not
+  # configured, the mass mail job reports the missing values when it runs
   gmail-api:
+    client-id: ${GMAIL_CLIENT_ID:}
+    client-secret: ${GMAIL_CLIENT_SECRET:}
     refresh-token: ${GMAIL_REFRESH_TOKEN:}
     user-email: ${GMAIL_USER_EMAIL:}
 

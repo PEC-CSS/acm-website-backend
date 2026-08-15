@@ -2,14 +2,13 @@ package com.pecacm.backend.services;
 
 import com.pecacm.backend.entities.Certificate;
 import com.pecacm.backend.entities.Event;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.Message;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.UserCredentials;
+import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
 import jakarta.mail.internet.InternetAddress;
@@ -18,8 +17,8 @@ import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +34,15 @@ import java.util.Properties;
 public class MassMailService {
 
     private final TemplateGeneratorService generatorService;
-    private final ObjectMapper objectMapper;
+
+    // read from configuration rather than a bundled secret.json, so the deployed
+    // environment can supply them the same way it supplies the database and SMTP
+    // credentials. secret.json is gitignored and is not present in the built jar
+    @Value("${spring.gmail-api.client-id}")
+    private String clientId;
+
+    @Value("${spring.gmail-api.client-secret}")
+    private String clientSecret;
 
     @Value("${spring.gmail-api.refresh-token}")
     private String refreshToken;
@@ -43,39 +50,19 @@ public class MassMailService {
     @Value("${spring.gmail-api.user-email}")
     private String userEmail;
 
-    @jakarta.annotation.PostConstruct
+    // reported at startup so that a deployment missing the credentials is visible
+    // before someone tries to send certificates. secret.json is no longer read,
+    // the client id and secret come from configuration like the other three
+    @PostConstruct
     public void validateGmailConfig() {
-        if (refreshToken == null || refreshToken.trim().isEmpty() || "${spring.gmail-api.refresh-token}".equals(refreshToken)) {
-            log.warn("Gmail API refresh-token is not configured. Mass mailing will fail.");
-        }
-        if (userEmail == null || userEmail.trim().isEmpty() || "${spring.gmail-api.user-email}".equals(userEmail)) {
-            log.warn("Gmail API user-email is not configured. Mass mailing will fail.");
-        }
-        try {
-            ClassPathResource resource = new ClassPathResource("secret.json");
-            if (!resource.exists()) {
-                log.warn("secret.json was not found in classpath. Mass mailing will fail.");
-            } else {
-                JsonNode root = objectMapper.readTree(resource.getInputStream());
-                JsonNode secrets = root.has("web") ? root.get("web") : root.get("installed");
-                if (secrets == null) {
-                    log.warn("Invalid secret.json file - No 'web' or 'installed' object found.");
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to validate secret.json file: {}", e.getMessage());
+        if (Strings.isBlank(clientId) || Strings.isBlank(clientSecret)
+                || Strings.isBlank(refreshToken) || Strings.isBlank(userEmail)) {
+            log.warn("Gmail API credentials are not fully configured, mass mailing will fail");
         }
     }
 
     private Gmail getGmailService() throws Exception {
-        ClassPathResource resource = new ClassPathResource("secret.json");
-        JsonNode root = objectMapper.readTree(resource.getInputStream());
-        
-        JsonNode secrets = root.has("web") ? root.get("web") : root.get("installed");
-        if (secrets == null) throw new RuntimeException("Invalid secret.json file - No 'web' or 'installed' object found");
-
-        String clientId = secrets.get("client_id").asText();
-        String clientSecret = secrets.get("client_secret").asText();
+        verifyCredentialsConfigured();
 
         UserCredentials credentials = UserCredentials.newBuilder()
                 .setClientId(clientId)
@@ -89,6 +76,16 @@ public class MassMailService {
                 new HttpCredentialsAdapter(credentials))
                 .setApplicationName("ACM Certification Tool")
                 .build();
+    }
+
+    // the properties default to empty so that a deployment without certificate
+    // support still starts, which means the gap has to be reported here instead
+    private void verifyCredentialsConfigured() {
+        if (Strings.isBlank(clientId) || Strings.isBlank(clientSecret)
+                || Strings.isBlank(refreshToken) || Strings.isBlank(userEmail)) {
+            throw new RuntimeException("Gmail API credentials are not configured, please set GMAIL_CLIENT_ID, " +
+                    "GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN and GMAIL_USER_EMAIL");
+        }
     }
 
     @Async
