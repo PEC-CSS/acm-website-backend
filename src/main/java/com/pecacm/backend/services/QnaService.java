@@ -7,6 +7,7 @@ import com.pecacm.backend.entities.Question;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.repository.AnswerRepository;
+import com.pecacm.backend.repository.QnaCooldownRepository;
 import com.pecacm.backend.repository.QuestionRepository;
 import com.pecacm.backend.repository.QuestionUpvoteRepository;
 import com.pecacm.backend.repository.UserRepository;
@@ -17,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,12 +32,14 @@ public class QnaService {
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
     private final QuestionUpvoteRepository questionUpvoteRepository;
+    private final QnaCooldownRepository qnaCooldownRepository;
     private final UserRepository userRepository;
 
-    public QnaService(QuestionRepository questionRepository, AnswerRepository answerRepository, QuestionUpvoteRepository questionUpvoteRepository, UserRepository userRepository) {
+    public QnaService(QuestionRepository questionRepository, AnswerRepository answerRepository, QuestionUpvoteRepository questionUpvoteRepository, QnaCooldownRepository qnaCooldownRepository, UserRepository userRepository) {
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
         this.questionUpvoteRepository = questionUpvoteRepository;
+        this.qnaCooldownRepository = qnaCooldownRepository;
         this.userRepository = userRepository;
     }
 
@@ -52,7 +57,7 @@ public class QnaService {
     }
 
     public List<Question> getQuestions(Integer offset, Integer pageSize, String email) {
-        List<Question> questions = questionRepository.findAllByOrderByUpvotesDescCreatedDateDesc(PageRequest.of(offset, pageSize));
+        List<Question> questions = questionRepository.findAllOrderByUpvotesDesc(PageRequest.of(offset, pageSize));
         return markCallerState(questions, email);
     }
 
@@ -102,8 +107,6 @@ public class QnaService {
         if (questionUpvoteRepository.insertIfAbsent(questionId, user.getId(), LocalDateTime.now()) == 0) {
             throw new AcmException(ErrorConstants.QUESTION_ALREADY_UPVOTED, HttpStatus.CONFLICT);
         }
-        questionRepository.incrementUpvotes(questionId);
-
         return markCallerState(getQuestion(questionId), email);
     }
 
@@ -117,8 +120,6 @@ public class QnaService {
         if (questionUpvoteRepository.deleteByQuestionIdAndUserId(questionId, user.getId()) == 0) {
             throw new AcmException(ErrorConstants.QUESTION_NOT_UPVOTED, HttpStatus.CONFLICT);
         }
-        questionRepository.decrementUpvotes(questionId);
-
         return markCallerState(getQuestion(questionId), email);
     }
 
@@ -141,7 +142,7 @@ public class QnaService {
 
     public List<Answer> getAnswersByQuestion(Integer questionId, Integer offset, Integer pageSize, String email) {
         getQuestion(questionId);
-        List<Answer> answers = answerRepository.findAllByQuestionIdOrderByCreatedDateAsc(questionId, PageRequest.of(offset, pageSize));
+        List<Answer> answers = answerRepository.findAllByQuestionIdOrderByCreatedAtAsc(questionId, PageRequest.of(offset, pageSize));
         return markOwned(answers, email);
     }
 
@@ -174,7 +175,17 @@ public class QnaService {
 
     // fills the transient flags the client needs, in one pass per page
     private List<Question> markCallerState(List<Question> questions, String email) {
-        if (email == null || questions.isEmpty()) {
+        if (questions.isEmpty()) {
+            return questions;
+        }
+        List<Integer> questionIds = questions.stream().map(Question::getId).toList();
+
+        Map<Integer, Integer> upvoteCounts = new HashMap<>();
+        questionUpvoteRepository.countByQuestionIds(questionIds)
+                .forEach(row -> upvoteCounts.put((Integer) row[0], ((Number) row[1]).intValue()));
+        questions.forEach(question -> question.setUpvotes(upvoteCounts.getOrDefault(question.getId(), 0)));
+
+        if (email == null) {
             return questions;
         }
         Optional<User> user = userRepository.findByEmail(email);
@@ -183,7 +194,6 @@ public class QnaService {
         }
 
         Integer userId = user.get().getId();
-        List<Integer> questionIds = questions.stream().map(Question::getId).toList();
         Set<Integer> upvotedIds = new HashSet<>(questionUpvoteRepository.findUpvotedQuestionIds(userId, questionIds));
         questions.forEach(question -> {
             question.setUpvoted(upvotedIds.contains(question.getId()));
@@ -218,7 +228,7 @@ public class QnaService {
     private void verifyQuestionCooldown(User user) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime cooldownStart = now.minusMinutes(Constants.QUESTION_COOLDOWN_MINUTES);
-        if (userRepository.markQuestionAsked(user.getId(), now, cooldownStart) == 0) {
+        if (qnaCooldownRepository.claimQuestionSlot(user.getId(), now, cooldownStart) == 0) {
             throw new AcmException(
                     ErrorConstants.QUESTION_ASKED_TOO_SOON + Constants.QUESTION_COOLDOWN_MINUTES + " minutes",
                     HttpStatus.TOO_MANY_REQUESTS
@@ -229,7 +239,7 @@ public class QnaService {
     private void verifyAnswerCooldown(User user) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime cooldownStart = now.minusMinutes(Constants.ANSWER_COOLDOWN_MINUTES);
-        if (userRepository.markAnswerPosted(user.getId(), now, cooldownStart) == 0) {
+        if (qnaCooldownRepository.claimAnswerSlot(user.getId(), now, cooldownStart) == 0) {
             throw new AcmException(
                     ErrorConstants.ANSWER_POSTED_TOO_SOON + Constants.ANSWER_COOLDOWN_MINUTES + " minutes",
                     HttpStatus.TOO_MANY_REQUESTS

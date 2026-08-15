@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -47,20 +46,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             "SET password = :password " +
             "WHERE email = :email")
     void updatePasswordByEmail(String password, String email);
-
-    // claims the next post slot in one statement, so simultaneous requests cannot
-    // both pass the cooldown. Returns 0 when the cooldown has not elapsed yet.
-    @Modifying(flushAutomatically = true)
-    @Query("UPDATE User " +
-            "SET lastQuestionDate = :now " +
-            "WHERE id = :userId AND (lastQuestionDate IS NULL OR lastQuestionDate <= :cooldownStart)")
-    int markQuestionAsked(@Param("userId") Integer userId, @Param("now") LocalDateTime now, @Param("cooldownStart") LocalDateTime cooldownStart);
-
-    @Modifying(flushAutomatically = true)
-    @Query("UPDATE User " +
-            "SET lastAnswerDate = :now " +
-            "WHERE id = :userId AND (lastAnswerDate IS NULL OR lastAnswerDate <= :cooldownStart)")
-    int markAnswerPosted(@Param("userId") Integer userId, @Param("now") LocalDateTime now, @Param("cooldownStart") LocalDateTime cooldownStart);
 
     Long countByXpGreaterThan(Integer xp);
 

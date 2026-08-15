@@ -24,9 +24,6 @@ public class Question {
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Builder.Default
-    @Column(name = "upvotes", nullable = false)
-    private Integer upvotes = 0;
 
     // questions are anonymous, asker is kept only for the edit/delete checks.
     // lazy because it is never serialized, only its id is compared
@@ -36,10 +33,15 @@ public class Question {
     private User askedBy;
 
     @CreationTimestamp
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    // not persisted, lets the client render the upvote toggle and the edit controls
+    // none of these are persisted, they are derived per request : the count comes
+    // from the upvote rows, the flags from who is asking
+    @Builder.Default
+    @Transient
+    private Integer upvotes = 0;
+
     @Builder.Default
     @Transient
     private Boolean upvoted = false;

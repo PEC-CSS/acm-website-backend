@@ -37,8 +37,8 @@ public class Answer {
     private User answeredBy;
 
     @CreationTimestamp
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     // not persisted, lets the client render the edit controls on its own answers
     @Builder.Default

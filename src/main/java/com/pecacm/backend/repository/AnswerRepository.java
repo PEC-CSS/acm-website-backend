@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface AnswerRepository extends JpaRepository<Answer, Integer> {
 
-    List<Answer> findAllByQuestionIdOrderByCreatedDateAsc(Integer questionId, PageRequest pageRequest);
+    List<Answer> findAllByQuestionIdOrderByCreatedAtAsc(Integer questionId, PageRequest pageRequest);
 
     void deleteAllByQuestion(Question question);
 }

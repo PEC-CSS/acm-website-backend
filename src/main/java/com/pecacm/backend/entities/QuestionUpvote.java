@@ -37,6 +37,6 @@ public class QuestionUpvote {
     private User user;
 
     @CreationTimestamp
-    @Column(name = "created_date")
-    private LocalDateTime createdDate;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }
