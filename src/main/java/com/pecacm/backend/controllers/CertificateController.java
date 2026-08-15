@@ -1,5 +1,6 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Certificate;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.repository.EventRepository;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,9 +25,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+// certificates carry the club's name and the mass mail job sends from the ACM
+// account, so the whole controller is restricted. Declared once on the class so
+// that an endpoint added later is not left open by accident
 @RestController
 @RequestMapping("/api/certificates")
 @RequiredArgsConstructor
+@PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
 @Slf4j
 public class CertificateController {
 
