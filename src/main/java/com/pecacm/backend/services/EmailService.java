@@ -8,6 +8,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.commonmark.node.Node;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -26,6 +27,18 @@ public class EmailService {
     private final VerificationService verificationService;
     private final UserRepository userRepository;
     private final UserService userService;
+
+    @Value("${verify.base.frontend}")
+    private String frontendBaseUrl;
+
+    @Value("${verify.reset.path:forgot-password/change-password}")
+    private String resetPath;
+
+    // Gmail requires the sender to match the authenticated account, so the From
+    // address is taken from the same property used to log in to the SMTP server.
+    @Value("${spring.mail.username}")
+    private String fromAddress;
+
     public EmailService(JavaMailSender javaMailSender, VerificationService verificationService, UserRepository userRepository, UserService userService) {
         this.javaMailSender = javaMailSender;
         this.verificationService = verificationService;
@@ -41,13 +54,24 @@ public class EmailService {
         VerificationToken token = verificationService.getVerificationToken(userService.getUserByEmail(username));
 
         SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setFrom(fromAddress);
         mailMessage.setTo(username);
         mailMessage.setSubject("Reset your password");
         mailMessage.setText(
-                "to change your password please click here " + "dummyFrontEndRoute?token=" + token.getToken().toString()
+                "Hi,\n\n"
+                        + "We received a request to reset the password for your PEC ACM account.\n\n"
+                        + "Reset it here (this link is valid for 15 minutes):\n"
+                        + buildResetLink(token) + "\n\n"
+                        + "If you did not request this, you can safely ignore this email.\n"
         );
 
         javaMailSender.send(mailMessage);
+    }
+
+    private String buildResetLink(VerificationToken token) {
+        String base = frontendBaseUrl.endsWith("/") ? frontendBaseUrl : frontendBaseUrl + "/";
+        String path = resetPath.startsWith("/") ? resetPath.substring(1) : resetPath;
+        return base + path + "?token=" + token.getToken();
     }
 
     public void sendEmail(List<User> users, String subject, String body) {
