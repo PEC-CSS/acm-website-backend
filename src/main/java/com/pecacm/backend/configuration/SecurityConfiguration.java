@@ -52,7 +52,6 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
                         a -> a.requestMatchers("/error").anonymous()
-                                .requestMatchers("/api/certificates/**", "/api/templates/**").permitAll() // Adjust security as needed
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(

@@ -1,5 +1,6 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.Template;
 import com.pecacm.backend.repository.EventRepository;
@@ -8,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,9 +20,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+// templates decide what every issued certificate looks like, so they are
+// restricted to the same roles that manage certificates
 @RestController
 @RequestMapping("/api/templates")
 @RequiredArgsConstructor
+@PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
 @Slf4j
 public class TemplateController {
 

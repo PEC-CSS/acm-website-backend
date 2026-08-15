@@ -25,6 +25,10 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### BUILD OUTPUT ###
+# compiled classes and packaged jars, rebuilt by maven on every build
+target/
+
 ### VS Code ###
 .vscode/
 

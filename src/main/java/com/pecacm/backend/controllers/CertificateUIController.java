@@ -1,5 +1,6 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Certificate;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.Template;
@@ -17,6 +18,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,9 +33,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+// the portal drives the same actions as the certificate APIs, including the mass
+// mail job, so it is restricted to the same roles. The browser has to send the
+// same bearer token as the APIs, this page has no login of its own yet
 @Controller
 @RequestMapping("/ui")
 @RequiredArgsConstructor
+@PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
 @Slf4j
 public class CertificateUIController {
 
