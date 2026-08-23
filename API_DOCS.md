@@ -49,7 +49,7 @@ Authenticate the user with the system and obtain the auth_token
 
 | Method | URL             |
 |--------|-----------------|
-| POST   | `v1/user/login` |
+| POST   | `/user/login` |
 
 | Type | Params     | Values |
 |------|------------|--------|
@@ -76,7 +76,7 @@ Register new users to the platform
 
 | Method | URL       |
 |--------|-----------|
-| POST   | `v1/user` |
+| POST   | `/user` |
 
 | Type | Params     | Values  |
 |------|------------|---------|
@@ -102,7 +102,7 @@ Register new users to the platform
 
 | Method | URL             |
 |--------|-----------------|
-| POST   | `v1/user/login` |
+| POST   | `/user/login` |
 
 | Type | Params     | Values |
 |------|------------|--------|

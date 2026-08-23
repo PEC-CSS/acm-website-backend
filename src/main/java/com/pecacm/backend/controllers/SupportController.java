@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/support")
+@RequestMapping("/support")
 public class SupportController {
 
     private final SupportService supportService;

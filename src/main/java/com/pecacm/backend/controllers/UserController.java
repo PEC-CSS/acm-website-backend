@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/v1/user")
+@RequestMapping("/user")
 public class UserController {
 
     private final VerificationService verificationService;

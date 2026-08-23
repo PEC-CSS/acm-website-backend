@@ -25,7 +25,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/events")
+@RequestMapping("/events")
 public class EventsController {
 
     private final EventService eventService;
