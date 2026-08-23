@@ -14,6 +14,7 @@ import com.pecacm.backend.services.TemplateGeneratorService;
 import com.opencsv.CSVReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -49,7 +50,8 @@ public class CertificateUIController {
     private final TemplateGeneratorService generatorService;
     private final MassMailService massMailService;
 
-    private static final String UPLOAD_DIR = "uploads/";
+    @Value("${app.upload.dir:/tmp/acm-uploads}")
+    private String uploadDir;
 
     @GetMapping
     public String showPortal(Model model) {
@@ -65,7 +67,7 @@ public class CertificateUIController {
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new RuntimeException("Event not found"));
 
-            Path uploadPath = Paths.get(UPLOAD_DIR);
+            Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
