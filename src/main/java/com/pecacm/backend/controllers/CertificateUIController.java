@@ -1,5 +1,6 @@
 package com.pecacm.backend.controllers;
 
+import com.pecacm.backend.constants.Constants;
 import com.pecacm.backend.entities.Certificate;
 import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.Template;
@@ -13,10 +14,12 @@ import com.pecacm.backend.services.TemplateGeneratorService;
 import com.opencsv.CSVReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -31,9 +34,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+// the portal drives the same actions as the certificate APIs, including the mass
+// mail job, so it is restricted to the same roles. The browser has to send the
+// same bearer token as the APIs, this page has no login of its own yet
 @Controller
 @RequestMapping("/ui")
 @RequiredArgsConstructor
+@PreAuthorize(Constants.HAS_ROLE_CORE_AND_ABOVE)
 @Slf4j
 public class CertificateUIController {
 
@@ -43,7 +50,8 @@ public class CertificateUIController {
     private final TemplateGeneratorService generatorService;
     private final MassMailService massMailService;
 
-    private static final String UPLOAD_DIR = "uploads/";
+    @Value("${app.upload.dir:/tmp/acm-uploads}")
+    private String uploadDir;
 
     @GetMapping
     public String showPortal(Model model) {
@@ -59,7 +67,7 @@ public class CertificateUIController {
             Event event = eventRepository.findById(eventId)
                     .orElseThrow(() -> new RuntimeException("Event not found"));
 
-            Path uploadPath = Paths.get(UPLOAD_DIR);
+            Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }

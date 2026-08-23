@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${PORT:8080}
   error:
     include-message: always
   ssl:
@@ -23,19 +23,15 @@ spring:
   docker:
     compose:
       enabled: false
-  profiles:
-    active: dev
   application:
     name: certification
   datasource:
-    url: jdbc:sqlite:certificate.db
-    driver-class-name: org.sqlite.JDBC
-  sql:
-    init:
-      mode: always
+    url: ${POSTGRESQL_DB_URL}
+    username: ${POSTGRESQL_DB_USER}
+    password: ${POSTGRESQL_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   jpa:
-    defer-datasource-initialization: true
-    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -51,12 +47,20 @@ spring:
           starttls:
             enable: true
             required: true
+  # empty defaults keep the application bootable when certificates are not
+  # configured, the mass mail job reports the missing values when it runs
   gmail-api:
+    client-id: ${GMAIL_CLIENT_ID:}
+    client-secret: ${GMAIL_CLIENT_SECRET:}
     refresh-token: ${GMAIL_REFRESH_TOKEN:}
     user-email: ${GMAIL_USER_EMAIL:}
 
 jwt:
-  secret: nyanpasu
+  secret: ${JWT_SECRET}
 verify:
   base:
-    frontend: https://pecacm.in/
+    frontend: ${VERIFY_BASE_FRONTEND:https://pecacm.in/}
+
+app:
+  upload:
+    dir: ${APP_UPLOAD_DIR:/tmp/acm-uploads}
