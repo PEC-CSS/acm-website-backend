@@ -14,6 +14,8 @@ public interface AttendanceRecordRepository extends JpaRepository<AttendanceReco
 
     boolean existsByEventIdAndUserId(Integer eventId, Integer userId);
 
+    Optional<AttendanceRecord> findByEventIdAndUserId(Integer eventId, Integer userId);
+
     boolean existsBySessionIdAndUserId(Integer sessionId, Integer userId);
 
     Optional<AttendanceRecord> findBySessionIdAndUserId(Integer sessionId, Integer userId);

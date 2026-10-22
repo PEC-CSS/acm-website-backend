@@ -143,6 +143,29 @@ public class AttendanceService {
         return mapToSessionResponse(session);
     }
 
+    public AttendanceSessionResponse getSessionById(Integer sessionId) {
+        AttendanceSession session = attendanceSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AcmException("Attendance session not found", HttpStatus.NOT_FOUND));
+        return mapToSessionResponse(session);
+    }
+
+    public List<AttendanceSessionResponse> getSessionsForEvent(Integer eventId) {
+        if (!eventRepository.existsById(eventId)) {
+            throw new AcmException("Event not found", HttpStatus.NOT_FOUND);
+        }
+        return attendanceSessionRepository.findByEventIdOrderByStartTimeDesc(eventId).stream()
+                .map(this::mapToSessionResponse)
+                .toList();
+    }
+
+    public Optional<AttendanceRecordResponse> getUserAttendanceForEvent(Integer eventId, User user) {
+        if (user == null || eventId == null) {
+            return Optional.empty();
+        }
+        return attendanceRecordRepository.findByEventIdAndUserId(eventId, user.getId())
+                .map(this::mapToRecordResponse);
+    }
+
     @Transactional
     public AttendanceTokenResponse getRotatingToken(Integer sessionId, User adminUser) {
         AttendanceSession session = attendanceSessionRepository.findById(sessionId)
