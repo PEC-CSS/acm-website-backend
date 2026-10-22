@@ -348,5 +348,61 @@ class AttendanceServiceTest {
         assertEquals(13, studentUser.getXp());
         assertTrue(record.getXpAwarded());
     }
+
+    @Test
+    void testGetSessionById_Success() {
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+        when(attendanceRecordRepository.countBySessionId(100)).thenReturn(2L);
+
+        AttendanceSessionResponse response = attendanceService.getSessionById(100);
+
+        assertNotNull(response);
+        assertEquals(100, response.getId());
+        assertEquals(2L, response.getTotalAttendees());
+    }
+
+    @Test
+    void testGetSessionsForEvent_Success() {
+        when(eventRepository.existsById(10)).thenReturn(true);
+        when(attendanceSessionRepository.findByEventIdOrderByStartTimeDesc(10)).thenReturn(List.of(testSession));
+        when(attendanceRecordRepository.countBySessionId(100)).thenReturn(0L);
+
+        List<AttendanceSessionResponse> sessions = attendanceService.getSessionsForEvent(10);
+
+        assertNotNull(sessions);
+        assertEquals(1, sessions.size());
+        assertEquals(100, sessions.get(0).getId());
+    }
+
+    @Test
+    void testGetUserAttendanceForEvent_Found() {
+        AttendanceRecord record = AttendanceRecord.builder()
+                .id(1)
+                .event(testEvent)
+                .session(testSession)
+                .user(studentUser)
+                .markedAt(LocalDateTime.now())
+                .method(AttendanceMethod.QR_SCAN)
+                .xpAwarded(false)
+                .build();
+
+        when(attendanceRecordRepository.findByEventIdAndUserId(10, 2)).thenReturn(Optional.of(record));
+
+        Optional<AttendanceRecordResponse> response = attendanceService.getUserAttendanceForEvent(10, studentUser);
+
+        assertTrue(response.isPresent());
+        assertEquals(1, response.get().getId());
+        assertEquals(2, response.get().getUserId());
+    }
+
+    @Test
+    void testGetUserAttendanceForEvent_NotFound() {
+        when(attendanceRecordRepository.findByEventIdAndUserId(10, 2)).thenReturn(Optional.empty());
+
+        Optional<AttendanceRecordResponse> response = attendanceService.getUserAttendanceForEvent(10, studentUser);
+
+        assertTrue(response.isEmpty());
+    }
 }
+
 
