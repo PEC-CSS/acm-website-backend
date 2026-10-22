@@ -48,4 +48,8 @@ public class AttendanceSession {
     @Column(name = "grace_period_seconds", nullable = false)
     @Builder.Default
     private Integer gracePeriodSeconds = 5;
+
+    @Column(name = "participant_xp", nullable = false)
+    @Builder.Default
+    private Integer participantXp = 1;
 }

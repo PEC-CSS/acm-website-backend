@@ -22,6 +22,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findBySid(Integer sid);
+
     @Query("SELECT u FROM User u WHERE u.email in :emails")
     List<User> findAllByEmail(Collection<String> emails);
 
