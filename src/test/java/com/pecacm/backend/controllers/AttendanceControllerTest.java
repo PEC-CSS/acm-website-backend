@@ -257,4 +257,14 @@ class AttendanceControllerTest {
         mockMvc.perform(get("/attendance/events/10/my-status"))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void testStreamRotatingTokens_Success() throws Exception {
+        when(userRepository.findByEmail("admin@pec.edu.in")).thenReturn(Optional.of(testUser));
+        when(attendanceService.streamRotatingTokens(eq(100), eq(testUser)))
+                .thenReturn(new org.springframework.web.servlet.mvc.method.annotation.SseEmitter());
+
+        mockMvc.perform(get("/attendance/sessions/100/token/stream"))
+                .andExpect(status().isOk());
+    }
 }

@@ -27,12 +27,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AttendanceService {
@@ -129,6 +134,20 @@ public class AttendanceService {
         return mapToSessionResponse(session);
     }
 
+    @Transactional
+    public int expireStaleSessions() {
+        List<AttendanceSession> stale = attendanceSessionRepository
+                .findAllByStatusAndEndTimeBefore(AttendanceSessionStatus.ACTIVE, LocalDateTime.now());
+
+        if (stale.isEmpty()) {
+            return 0;
+        }
+
+        stale.forEach(session -> session.setStatus(AttendanceSessionStatus.EXPIRED));
+        attendanceSessionRepository.saveAll(stale);
+        return stale.size();
+    }
+
     public AttendanceSessionResponse getActiveSessionForEvent(Integer eventId) {
         AttendanceSession session = attendanceSessionRepository
                 .findFirstByEventIdAndStatusOrderByStartTimeDesc(eventId, AttendanceSessionStatus.ACTIVE)
@@ -184,6 +203,56 @@ public class AttendanceService {
         return attendanceTokenService.generateToken(session);
     }
 
+    public SseEmitter streamRotatingTokens(Integer sessionId, User adminUser) {
+        AttendanceSession session = attendanceSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new AcmException("Attendance session not found", HttpStatus.NOT_FOUND));
+
+        if (session.getStatus() != AttendanceSessionStatus.ACTIVE) {
+            throw new AcmException("Attendance session is not active", HttpStatus.BAD_REQUEST);
+        }
+
+        if (LocalDateTime.now().isAfter(session.getEndTime())) {
+            session.setStatus(AttendanceSessionStatus.EXPIRED);
+            attendanceSessionRepository.save(session);
+            throw new AcmException("Attendance session has expired", HttpStatus.BAD_REQUEST);
+        }
+
+        long timeoutMillis = 30 * 60 * 1000L;
+        SseEmitter emitter = new SseEmitter(timeoutMillis);
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
+        Runnable pushTask = () -> {
+            try {
+                AttendanceSession current = attendanceSessionRepository.findById(sessionId).orElse(null);
+                if (current == null || current.getStatus() != AttendanceSessionStatus.ACTIVE
+                        || LocalDateTime.now().isAfter(current.getEndTime())) {
+                    emitter.send(SseEmitter.event().name("session-stopped").data("Session is no longer active"));
+                    emitter.complete();
+                    executor.shutdown();
+                    return;
+                }
+
+                AttendanceTokenResponse tokenResponse = attendanceTokenService.generateToken(current);
+                emitter.send(SseEmitter.event().name("token").data(tokenResponse));
+            } catch (Exception ex) {
+                emitter.completeWithError(ex);
+                executor.shutdown();
+            }
+        };
+
+        pushTask.run();
+
+        long intervalSeconds = session.getTokenExpirySeconds() != null && session.getTokenExpirySeconds() > 0
+                ? session.getTokenExpirySeconds() : 5L;
+        executor.scheduleAtFixedRate(pushTask, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+
+        emitter.onCompletion(executor::shutdown);
+        emitter.onTimeout(executor::shutdown);
+        emitter.onError(t -> executor.shutdown());
+
+        return emitter;
+    }
+
     @Transactional
     public AttendanceRecordResponse markAttendanceByQr(String token, User currentUser) {
         if (currentUser == null) {
@@ -198,12 +267,14 @@ public class AttendanceService {
         AttendanceSession session = attendanceSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new AcmException("Attendance session not found", HttpStatus.NOT_FOUND));
 
-        if (session.getStatus() == AttendanceSessionStatus.STOPPED) {
+        long graceSeconds = session.getGracePeriodSeconds() != null ? session.getGracePeriodSeconds() : 5L;
+        boolean pastGracePeriod = LocalDateTime.now().isAfter(session.getEndTime().plusSeconds(graceSeconds));
+
+        if (session.getStatus() == AttendanceSessionStatus.STOPPED && pastGracePeriod) {
             throw new AcmException("Attendance session has been stopped by admin", HttpStatus.BAD_REQUEST);
         }
 
-        long graceSeconds = session.getGracePeriodSeconds() != null ? session.getGracePeriodSeconds() : 5L;
-        if (LocalDateTime.now().isAfter(session.getEndTime().plusSeconds(graceSeconds))) {
+        if (pastGracePeriod) {
             if (session.getStatus() == AttendanceSessionStatus.ACTIVE) {
                 session.setStatus(AttendanceSessionStatus.EXPIRED);
                 attendanceSessionRepository.save(session);
@@ -245,6 +316,10 @@ public class AttendanceService {
 
         AttendanceSession session = attendanceSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new AcmException("Attendance session not found", HttpStatus.NOT_FOUND));
+
+        if (session.getEvent().isEnded()) {
+            throw new AcmException("Cannot mark attendance for an ended event", HttpStatus.BAD_REQUEST);
+        }
 
         User targetUser;
         if (request.getSid() != null) {
@@ -320,33 +395,46 @@ public class AttendanceService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new AcmException("Event not found", HttpStatus.NOT_FOUND));
 
+        if (!event.isEnded()) {
+            throw new AcmException("Cannot award attendance XP before the event has ended", HttpStatus.BAD_REQUEST);
+        }
+
         List<AttendanceRecord> unAwarded = attendanceRecordRepository.findByEventIdAndXpAwardedFalse(eventId);
         if (unAwarded.isEmpty()) {
             return 0;
         }
 
         LocalDateTime now = LocalDateTime.now();
-        List<Transaction> transactions = unAwarded.stream().map(record -> {
-            int effectiveXp = (xpAmount != null && xpAmount > 0)
-                    ? xpAmount
-                    : (record.getSession() != null && record.getSession().getParticipantXp() != null
-                    ? record.getSession().getParticipantXp() : 1);
+        List<Transaction> transactions = new ArrayList<>();
+        List<User> usersToUpdate = new ArrayList<>();
 
+        for (AttendanceRecord record : unAwarded) {
             User user = record.getUser();
-            user.setXp(user.getXp() + effectiveXp);
             record.setXpAwarded(true);
 
-            return Transaction.builder()
-                    .event(event)
-                    .user(user)
-                    .role(EventRole.PARTICIPANT)
-                    .xp(effectiveXp)
-                    .date(now)
-                    .build();
-        }).toList();
+            if (!transactionRepository.existsByEventIdAndUserIdAndRole(eventId, user.getId(), EventRole.PARTICIPANT)) {
+                int effectiveXp = (xpAmount != null && xpAmount > 0)
+                        ? xpAmount
+                        : (record.getSession() != null && record.getSession().getParticipantXp() != null
+                        ? record.getSession().getParticipantXp() : 1);
 
-        transactionRepository.saveAll(transactions);
-        userRepository.saveAll(unAwarded.stream().map(AttendanceRecord::getUser).toList());
+                user.setXp(user.getXp() + effectiveXp);
+                usersToUpdate.add(user);
+
+                transactions.add(Transaction.builder()
+                        .event(event)
+                        .user(user)
+                        .role(EventRole.PARTICIPANT)
+                        .xp(effectiveXp)
+                        .date(now)
+                        .build());
+            }
+        }
+
+        if (!transactions.isEmpty()) {
+            transactionRepository.saveAll(transactions);
+            userRepository.saveAll(usersToUpdate);
+        }
         attendanceRecordRepository.saveAll(unAwarded);
 
         return unAwarded.size();

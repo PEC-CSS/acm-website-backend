@@ -16,6 +16,10 @@ import java.time.LocalDateTime;
         schema = "public",
         uniqueConstraints = {
                 @UniqueConstraint(name = "uk_attendance_event_user", columnNames = {"event_id", "user_id"})
+        },
+        indexes = {
+                @Index(name = "idx_attendance_records_session_id", columnList = "session_id"),
+                @Index(name = "idx_attendance_records_event_xp", columnList = "event_id, xp_awarded")
         }
 )
 @Builder

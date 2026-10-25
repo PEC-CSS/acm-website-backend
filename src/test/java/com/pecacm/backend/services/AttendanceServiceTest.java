@@ -6,6 +6,7 @@ import com.pecacm.backend.entities.Event;
 import com.pecacm.backend.entities.User;
 import com.pecacm.backend.enums.AttendanceMethod;
 import com.pecacm.backend.enums.AttendanceSessionStatus;
+import com.pecacm.backend.enums.EventRole;
 import com.pecacm.backend.exception.AcmException;
 import com.pecacm.backend.model.ManualAttendanceRequest;
 import com.pecacm.backend.model.StartAttendanceSessionRequest;
@@ -16,6 +17,7 @@ import com.pecacm.backend.repository.TransactionRepository;
 import com.pecacm.backend.repository.UserRepository;
 import com.pecacm.backend.response.AttendanceRecordResponse;
 import com.pecacm.backend.response.AttendanceSessionResponse;
+import com.pecacm.backend.response.AttendanceTokenResponse;
 import com.pecacm.backend.response.EventUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,12 +25,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -265,6 +273,7 @@ class AttendanceServiceTest {
 
     @Test
     void testAwardAttendanceXp_Success() {
+        testEvent.setEnded(true);
         AttendanceRecord record = AttendanceRecord.builder()
                 .id(1)
                 .event(testEvent)
@@ -278,6 +287,8 @@ class AttendanceServiceTest {
         when(eventRepository.findById(10)).thenReturn(Optional.of(testEvent));
         when(attendanceRecordRepository.findByEventIdAndXpAwardedFalse(10))
                 .thenReturn(List.of(record));
+        when(transactionRepository.existsByEventIdAndUserIdAndRole(10, 2, EventRole.PARTICIPANT))
+                .thenReturn(false);
 
         int awarded = attendanceService.awardAttendanceXp(10, 5);
 
@@ -287,6 +298,45 @@ class AttendanceServiceTest {
         verify(transactionRepository, times(1)).saveAll(any());
         verify(userRepository, times(1)).saveAll(any());
         verify(attendanceRecordRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void testAwardAttendanceXp_EventNotEndedThrows() {
+        testEvent.setEnded(false);
+        when(eventRepository.findById(10)).thenReturn(Optional.of(testEvent));
+
+        AcmException exception = assertThrows(AcmException.class, () ->
+                attendanceService.awardAttendanceXp(10, 5));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals("Cannot award attendance XP before the event has ended", exception.getMessage());
+    }
+
+    @Test
+    void testAwardAttendanceXp_DeduplicateExistingParticipantTransaction() {
+        testEvent.setEnded(true);
+        AttendanceRecord record = AttendanceRecord.builder()
+                .id(1)
+                .event(testEvent)
+                .session(testSession)
+                .user(studentUser)
+                .markedAt(LocalDateTime.now())
+                .method(AttendanceMethod.QR_SCAN)
+                .xpAwarded(false)
+                .build();
+
+        when(eventRepository.findById(10)).thenReturn(Optional.of(testEvent));
+        when(attendanceRecordRepository.findByEventIdAndXpAwardedFalse(10))
+                .thenReturn(List.of(record));
+        when(transactionRepository.existsByEventIdAndUserIdAndRole(10, 2, EventRole.PARTICIPANT))
+                .thenReturn(true);
+
+        int awarded = attendanceService.awardAttendanceXp(10, 5);
+
+        assertEquals(1, awarded);
+        assertEquals(10, studentUser.getXp());
+        assertTrue(record.getXpAwarded());
+        verify(transactionRepository, never()).saveAll(any());
     }
 
     @Test
@@ -327,6 +377,7 @@ class AttendanceServiceTest {
 
     @Test
     void testAwardAttendanceXp_DefaultSessionXp() {
+        testEvent.setEnded(true);
         testSession.setParticipantXp(3);
         AttendanceRecord record = AttendanceRecord.builder()
                 .id(1)
@@ -341,6 +392,8 @@ class AttendanceServiceTest {
         when(eventRepository.findById(10)).thenReturn(Optional.of(testEvent));
         when(attendanceRecordRepository.findByEventIdAndXpAwardedFalse(10))
                 .thenReturn(List.of(record));
+        when(transactionRepository.existsByEventIdAndUserIdAndRole(10, 2, EventRole.PARTICIPANT))
+                .thenReturn(false);
 
         int awarded = attendanceService.awardAttendanceXp(10, null);
 
@@ -403,6 +456,180 @@ class AttendanceServiceTest {
 
         assertTrue(response.isEmpty());
     }
+
+    @Test
+    void testExpireStaleSessions_Success() {
+        AttendanceSession staleSession = AttendanceSession.builder()
+                .id(105)
+                .event(testEvent)
+                .status(AttendanceSessionStatus.ACTIVE)
+                .endTime(LocalDateTime.now().minusMinutes(5))
+                .build();
+
+        when(attendanceSessionRepository.findAllByStatusAndEndTimeBefore(eq(AttendanceSessionStatus.ACTIVE), any(LocalDateTime.class)))
+                .thenReturn(List.of(staleSession));
+
+        int expiredCount = attendanceService.expireStaleSessions();
+
+        assertEquals(1, expiredCount);
+        assertEquals(AttendanceSessionStatus.EXPIRED, staleSession.getStatus());
+        verify(attendanceSessionRepository, times(1)).saveAll(any());
+    }
+
+    @Test
+    void testStreamRotatingTokens_Success() {
+        AttendanceTokenResponse tokenResponse = AttendanceTokenResponse.builder()
+                .sessionId(100)
+                .token("100.12345.sig")
+                .expiresInSeconds(5L)
+                .build();
+
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+        when(attendanceTokenService.generateToken(testSession)).thenReturn(tokenResponse);
+
+        SseEmitter emitter = attendanceService.streamRotatingTokens(100, adminUser);
+
+        assertNotNull(emitter);
+        verify(attendanceTokenService, atLeastOnce()).generateToken(testSession);
+    }
+
+    @Test
+    void testStreamRotatingTokens_InactiveSessionThrows() {
+        testSession.setStatus(AttendanceSessionStatus.STOPPED);
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+
+        AcmException exception = assertThrows(AcmException.class, () ->
+                attendanceService.streamRotatingTokens(100, adminUser));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals("Attendance session is not active", exception.getMessage());
+    }
+
+    @Test
+    void testStreamRotatingTokens_ExpiredSessionThrows() {
+        testSession.setEndTime(LocalDateTime.now().minusMinutes(2));
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+
+        AcmException exception = assertThrows(AcmException.class, () ->
+                attendanceService.streamRotatingTokens(100, adminUser));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals("Attendance session has expired", exception.getMessage());
+    }
+
+    @Test
+    void testMarkAttendanceManually_EndedEvent_Throws() {
+        testEvent.setEnded(true);
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+
+        ManualAttendanceRequest request = ManualAttendanceRequest.builder().sid(21103001).build();
+        AcmException exception = assertThrows(AcmException.class, () ->
+                attendanceService.markAttendanceManually(100, request, adminUser));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals("Cannot mark attendance for an ended event", exception.getMessage());
+    }
+
+    @Test
+    void testMarkAttendanceByQr_StoppedSessionWithinGracePeriod_Success() {
+        testSession.setStatus(AttendanceSessionStatus.STOPPED);
+        testSession.setEndTime(LocalDateTime.now().minusSeconds(2));
+        testSession.setGracePeriodSeconds(5);
+
+        String token = "100.12345.sig";
+        when(attendanceTokenService.extractSessionId(token)).thenReturn(100);
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+        when(attendanceRecordRepository.existsByEventIdAndUserId(10, 2)).thenReturn(false);
+        when(attendanceTokenService.validateToken(testSession, token)).thenReturn(true);
+
+        AttendanceRecord savedRecord = AttendanceRecord.builder()
+                .id(1)
+                .event(testEvent)
+                .session(testSession)
+                .user(studentUser)
+                .markedAt(LocalDateTime.now())
+                .method(AttendanceMethod.QR_SCAN)
+                .xpAwarded(false)
+                .build();
+        when(attendanceRecordRepository.save(any(AttendanceRecord.class))).thenReturn(savedRecord);
+
+        AttendanceRecordResponse response = attendanceService.markAttendanceByQr(token, studentUser);
+
+        assertNotNull(response);
+        assertEquals(1, response.getId());
+    }
+
+    @Test
+    void testMarkAttendanceByQr_StoppedSessionPastGracePeriod_Throws() {
+        testSession.setStatus(AttendanceSessionStatus.STOPPED);
+        testSession.setEndTime(LocalDateTime.now().minusSeconds(10));
+        testSession.setGracePeriodSeconds(5);
+
+        String token = "100.12345.sig";
+        when(attendanceTokenService.extractSessionId(token)).thenReturn(100);
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+
+        AcmException exception = assertThrows(AcmException.class, () ->
+                attendanceService.markAttendanceByQr(token, studentUser));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatus());
+        assertEquals("Attendance session has been stopped by admin", exception.getMessage());
+    }
+
+    @Test
+    void testMarkAttendanceByQr_ConcurrentRequests_OnlyOneSucceeds() throws InterruptedException {
+        String token = "100.12345.sig";
+        when(attendanceTokenService.extractSessionId(token)).thenReturn(100);
+        when(attendanceSessionRepository.findById(100)).thenReturn(Optional.of(testSession));
+        when(attendanceTokenService.validateToken(testSession, token)).thenReturn(true);
+
+        AtomicInteger saveCalls = new AtomicInteger(0);
+        when(attendanceRecordRepository.save(any(AttendanceRecord.class))).thenAnswer(invocation -> {
+            if (saveCalls.incrementAndGet() > 1) {
+                throw new DataIntegrityViolationException("Unique constraint violation");
+            }
+            return AttendanceRecord.builder()
+                    .id(1)
+                    .event(testEvent)
+                    .session(testSession)
+                    .user(studentUser)
+                    .markedAt(LocalDateTime.now())
+                    .method(AttendanceMethod.QR_SCAN)
+                    .build();
+        });
+
+        int threadCount = 5;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch doneLatch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger conflictCount = new AtomicInteger(0);
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    startLatch.await();
+                    attendanceService.markAttendanceByQr(token, studentUser);
+                    successCount.incrementAndGet();
+                } catch (AcmException ex) {
+                    if (ex.getStatus() == HttpStatus.CONFLICT) {
+                        conflictCount.incrementAndGet();
+                    }
+                } catch (Exception ignored) {
+                } finally {
+                    doneLatch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        doneLatch.await();
+        executor.shutdown();
+
+        assertEquals(1, successCount.get());
+        assertEquals(4, conflictCount.get());
+    }
 }
+
 
 
