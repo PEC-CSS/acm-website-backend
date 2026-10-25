@@ -17,4 +17,6 @@ public class AttendanceTokenResponse {
     private Integer eventId;
     private Long expiresInSeconds;
     private Integer windowSeconds;
+    private Long serverTimeEpochMillis;
+    private Long remainingMillisInWindow;
 }

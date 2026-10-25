@@ -23,10 +23,12 @@ public class AttendanceTokenService {
         }
 
         long windowSeconds = session.getTokenExpirySeconds() != null ? session.getTokenExpirySeconds() : 5L;
+        long windowMillis = windowSeconds * 1000L;
         long nowMillis = System.currentTimeMillis();
-        long windowIndex = nowMillis / (windowSeconds * 1000L);
-        long elapsedInWindow = (nowMillis / 1000L) % windowSeconds;
-        long expiresInSeconds = windowSeconds - elapsedInWindow;
+        long windowIndex = nowMillis / windowMillis;
+        long elapsedMillis = nowMillis % windowMillis;
+        long remainingMillis = windowMillis - elapsedMillis;
+        long expiresInSeconds = (remainingMillis + 999L) / 1000L;
 
         String message = session.getId() + ":" + session.getEvent().getId() + ":" + windowIndex;
         String signature = sign(message, session.getSecretKey());
@@ -38,6 +40,8 @@ public class AttendanceTokenService {
                 .eventId(session.getEvent().getId())
                 .expiresInSeconds(expiresInSeconds)
                 .windowSeconds((int) windowSeconds)
+                .serverTimeEpochMillis(nowMillis)
+                .remainingMillisInWindow(remainingMillis)
                 .build();
     }
 

@@ -11,7 +11,14 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "attendance_sessions", schema = "public")
+@Table(
+        name = "attendance_sessions",
+        schema = "public",
+        indexes = {
+                @Index(name = "idx_attendance_sessions_event_status", columnList = "event_id, status"),
+                @Index(name = "idx_attendance_sessions_status_end_time", columnList = "status, end_time")
+        }
+)
 @Builder
 public class AttendanceSession {
 

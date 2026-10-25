@@ -24,5 +24,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Intege
     List<Transaction> findListByEventIdAndRoles(Integer eventId, List<EventRole> roles);
 
     Page<Transaction> findByEventIdAndRole(Integer eventId, EventRole eventRole, PageRequest pageRequest);
+
+    boolean existsByEventIdAndUserIdAndRole(Integer eventId, Integer userId, EventRole role);
 }
 

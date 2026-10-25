@@ -291,7 +291,32 @@ Fetches the current rotating token for projection or display on the organizer sc
 
 | Status | Response |
 |--------|----------|
-| 200 | `{"token": "<string>", "expiresInSeconds": 5, "sessionId": 100}` |
+| 200 | `{"token": "<string>", "sessionId": 100, "eventId": 10, "expiresInSeconds": 4, "windowSeconds": 5, "serverTimeEpochMillis": 1729424345000, "remainingMillisInWindow": 3450}` |
+| 400 | Session inactive or expired. |
+| 404 | Session not found. |
+
+---
+
+### Stream Rotating Attendance Tokens (SSE)
+
+Real-time Server-Sent Events (SSE) push stream for projector screens. Pushes updated tokens at window intervals without client polling.
+
+#### Request
+
+| Method | URL | Auth Role | Headers |
+|--------|-----|-----------|---------|
+| GET | `/attendance/sessions/{sessionId}/token/stream` | EB, Core, Admin | `Accept: text/event-stream` |
+
+#### Events
+
+- `event: token`: Emits `AttendanceTokenResponse` JSON object with current token, expiry, and clock sync info.
+- `event: session-stopped`: Emits notification when the session is stopped or expires, followed by stream closure.
+
+#### Response
+
+| Status | Description |
+|--------|-------------|
+| 200 | OK. Establishes long-lived SSE stream (`text/event-stream`). |
 | 400 | Session inactive or expired. |
 | 404 | Session not found. |
 
@@ -448,6 +473,6 @@ Awards XP in bulk to all event attendees who have not yet received XP. Idempoten
 | Status | Response |
 |--------|----------|
 | 200 | `{"awardedCount": <int>, "message": "Attendance XP successfully awarded"}` |
-| 400 | Bad request (invalid XP amount). |
+| 400 | Bad request (invalid XP amount or event not ended). |
 | 404 | Event not found. |
 

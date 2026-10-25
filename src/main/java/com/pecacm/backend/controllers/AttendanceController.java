@@ -16,11 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 import java.util.Map;
@@ -73,6 +75,12 @@ public class AttendanceController {
     @PreAuthorize(Constants.HAS_ROLE_EB_AND_ABOVE)
     public ResponseEntity<AttendanceTokenResponse> getRotatingToken(@PathVariable Integer sessionId) {
         return ResponseEntity.ok(attendanceService.getRotatingToken(sessionId, getAuthenticatedUser()));
+    }
+
+    @GetMapping(value = "/sessions/{sessionId}/token/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PreAuthorize(Constants.HAS_ROLE_EB_AND_ABOVE)
+    public SseEmitter streamRotatingTokens(@PathVariable Integer sessionId) {
+        return attendanceService.streamRotatingTokens(sessionId, getAuthenticatedUser());
     }
 
     @PostMapping("/scan")
