@@ -1,4 +1,9 @@
 HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+diff.txt
 
 ### STS ###
 .apt_generated
@@ -39,3 +44,41 @@ secret.json
 **/secret.json
 *-credentials.json
 serviceAccount*.json
+
+### LOGS ###
+*.log
+logs/
+*.log.*
+
+### JVM CRASH & HEAP DUMPS ###
+hs_err_pid*
+replay_pid*
+*.hprof
+
+### OS GENERATED FILES ###
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### TEMPORARY & BACKUP FILES ###
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+
+### BINARY ARCHIVES ###
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+!.mvn/wrapper/maven-wrapper.jar
