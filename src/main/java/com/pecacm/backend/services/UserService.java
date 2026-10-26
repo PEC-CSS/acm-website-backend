@@ -54,6 +54,7 @@ public class UserService implements UserDetailsService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Integer batch = 2004 + Math.floorDiv(user.getSid(), 1000000); // hacky fix
         user.setBatch(batch);
+        user.setIsPassout(batch != null && batch <= 2026);
         user.setVerified(false);
         userRepository.save(user);
     }
@@ -173,7 +174,9 @@ public class UserService implements UserDetailsService {
             }
             if (updatedUser.getSid() != null) {
                 existingUser.setSid(updatedUser.getSid());
-                existingUser.setBatch(2004 + Math.floorDiv(updatedUser.getSid(), 1000000));
+                int newBatch = 2004 + Math.floorDiv(updatedUser.getSid(), 1000000);
+                existingUser.setBatch(newBatch);
+                existingUser.setIsPassout(newBatch <= 2026);
             }
 
             return userRepository.save(existingUser);
