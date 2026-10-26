@@ -54,6 +54,9 @@ public class User implements UserDetails {
     @Column(name="xp_total", nullable = false)
     private Integer xp = 0;
 
+    @Column(name = "is_passout")
+    private Boolean isPassout = false;
+
     @Override
     @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
