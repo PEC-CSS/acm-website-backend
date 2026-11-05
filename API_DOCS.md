@@ -166,6 +166,7 @@ Backend system supporting automated rotating QR-based attendance tracking and ma
 - **Authentication**: Attendance is tied to the caller's JWT authentication token; client cannot impersonate other users.
 - **Verification Rule**: The participant's account must have `verified = true`. Unverified users are rejected with `403 Forbidden`.
 - **SID Validation**: Student IDs for manual entry must be valid 8-digit numbers (`10000000`–`99999999`) matching PEC standard format.
+- **Database Migration**: For environments running with `ddl-auto: validate` or `none`, execute `src/main/resources/attendance_schema.sql` to create `attendance_sessions` and `attendance_records` tables, unique constraints, and query indexes.
 
 ---
 
