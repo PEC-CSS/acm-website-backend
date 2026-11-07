@@ -28,6 +28,4 @@ jobs:
         run: mvn clean package spring-boot:repackage -DPOSTGRESQL_DB_URL="${{ env.DB_URL }}" -DPOSTGRESQL_DB_USER=postgres -DPOSTGRESQL_DB_PASSWORD=${{ env.DB_PASSWORD }} -DSMTP_EMAIL=${{ env.MAIL_ID }} -DSMTP_PASSWORD=${{ env.MAIL_PASSWORD }}
 
       - name: Build the Docker image
-        env:
-          IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/acm-website:pr
-        run: docker build -t ${{ env.IMAGE_NAME }} .
+        run: docker build -t acm-website:pr .
